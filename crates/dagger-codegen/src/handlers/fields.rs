@@ -47,8 +47,6 @@ pub fn render_fields(
                     proc: self.proc.clone(),
                     selection: query,
                 }
-
-                todo!()
             }
         });
 
