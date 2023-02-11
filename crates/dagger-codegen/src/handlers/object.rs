@@ -114,27 +114,40 @@ impl CacheVolume {
 
     #[test]
     fn can_render_query_container() {
+        let description = "Loads a container from ID.\nNull ID returns an empty container (scratch).\nOptional platform argument initializes new containers to execute and publish as that platform. Platform defaults to that of the builder's host.".into();
+
         let t: FullType = FullType {
             kind: Some(__TypeKind::OBJECT),
             name: Some("Query".into()),
             description: None,
             fields: Some(vec![FullTypeFields {
                 name: Some("container".into()),
-                description: Some("Loads a container from ID.\nNull ID returns an empty container (scratch).\nOptional platform argument initializes new containers to execute and publish as that platform. Platform defaults to that of the builder's host.".into()),
-                args: Some(
-                    vec![
-                    Some(
-                        FullTypeFieldsArgs
-                        {
-                        input_value: InputValue { name: "id".into(), description: None, type_: TypeRef { kind: Some(__TypeKind::SCALAR), name: Some("ContainerID".into()), of_type: None }, default_value: None } 
-                    }
-                        ),
-                    Some(
-                        FullTypeFieldsArgs {
+                description: Some(description),
+                args: Some(vec![
+                    Some(FullTypeFieldsArgs {
                         input_value: InputValue {
-                            name: "platform".into(), description: None, type_: TypeRef { kind: Some(__TypeKind::SCALAR), name: Some("Platform".into()), of_type: None }, 
-                            default_value: None }
-                    })
+                            name: "id".into(),
+                            description: None,
+                            type_: TypeRef {
+                                kind: Some(__TypeKind::SCALAR),
+                                name: Some("ContainerID".into()),
+                                of_type: None,
+                            },
+                            default_value: None,
+                        },
+                    }),
+                    Some(FullTypeFieldsArgs {
+                        input_value: InputValue {
+                            name: "platform".into(),
+                            description: None,
+                            type_: TypeRef {
+                                kind: Some(__TypeKind::SCALAR),
+                                name: Some("Platform".into()),
+                                of_type: None,
+                            },
+                            default_value: None,
+                        },
+                    }),
                 ]),
                 type_: Some(FullTypeFieldsType {
                     type_ref: TypeRef {
@@ -149,8 +162,7 @@ impl CacheVolume {
                 }),
                 is_deprecated: Some(false),
                 deprecation_reason: None,
-            }
-            ]),
+            }]),
             input_fields: None,
             interfaces: None,
             enum_values: None,
