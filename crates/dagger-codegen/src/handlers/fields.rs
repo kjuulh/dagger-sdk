@@ -7,8 +7,11 @@ use super::{
     utility::{render_description_from_field, render_description_from_input_value},
 };
 
-pub fn render_fields(fields: &Vec<FullTypeFields>) -> eyre::Result<Option<rust::Tokens>> {
+pub fn render_fields(
+    fields: &Vec<FullTypeFields>,
+) -> eyre::Result<Option<(rust::Tokens, rust::Tokens)>> {
     let mut collected_fields: Vec<rust::Tokens> = vec![];
+    let mut collected_args: Vec<rust::Tokens> = vec![];
     for field in fields.iter() {
         let name = field.name.as_ref().map(|n| n.to_case(Case::Snake)).unwrap();
         let output = render_field_output(field)?;
@@ -18,22 +21,23 @@ pub fn render_fields(fields: &Vec<FullTypeFields>) -> eyre::Result<Option<rust::
             None => None,
         };
 
-        let mut tkns = rust::Tokens::new();
-
         if let Some(args) = args.as_ref() {
-            tkns.append(quote! {
+            let mut args_tkns = rust::Tokens::new();
+            args_tkns.append(quote! {
                 $description
-                pub struct $(&name)Args {
+                pub struct $(&field.name.as_ref().map(|n| n.to_case(Case::Pascal)).unwrap())Args {
                     $(&args.args)
                 }
             });
-            tkns.push();
-        }
+            args_tkns.push();
 
+            collected_args.push(args_tkns);
+        }
+        let mut tkns = rust::Tokens::new();
         tkns.append(quote! {
             pub fn $(&name)(
                 &self,
-                $(if let Some(_) = args.as_ref() => args: $(&name)Args)
+                $(if let Some(_) = args.as_ref() => args: &$(&field.name.as_ref().map(|n| n.to_case(Case::Pascal)).unwrap())Args)
             ) -> $(&output) {
                 let query = self.selection.select($(field.name.as_ref().map(|n| format!("\"{}\"", n))));
                 $(if let Some(_) = args.as_ref() => query.args(args);)
@@ -51,9 +55,14 @@ pub fn render_fields(fields: &Vec<FullTypeFields>) -> eyre::Result<Option<rust::
         collected_fields.push(tkns);
     }
 
-    Ok(Some(quote! {
-        $(for field in collected_fields => $field $['\n'] )
-    }))
+    Ok(Some((
+        quote! {
+            $(for arg in collected_args => $arg $['\n'] )
+        },
+        quote! {
+            $(for field in collected_fields => $field $['\n'] )
+        },
+    )))
 }
 
 struct Arg {
@@ -91,15 +100,9 @@ fn render_args(args: &[Option<FullTypeFieldsArgs>]) -> Option<CollectedArgs> {
         };
 
         for arg in collected_args {
-            if let Some(desc) = arg.description {
-                if let Some(inner_desc) = collected_arg.description.as_mut() {
-                    inner_desc.append(desc);
-                    inner_desc.push();
-                }
-            }
-
             collected_arg.args.append(quote! {
-                $(arg.name.to_case(Case::Snake)): $(arg.type_),
+                $(arg.description)
+                pub $(arg.name.to_case(Case::Snake)): $(arg.type_),
             });
             collected_arg.args.push();
         }

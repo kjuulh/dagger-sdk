@@ -29,14 +29,24 @@ impl Handler for Object {
             None => None,
         };
 
+        let child = rust::import("std::process", "Child");
+        let connect_params = rust::import("dagger_core::connect_params", "ConnectParams");
+        let selection = rust::import("crate::querybuilder", "Selection");
+        let arc = rust::import("std::sync", "Arc");
+
         let out = quote! {
+            $(if fields.as_ref().is_some() => $(fields.as_ref().map(|f| &f.0)))
+
             $(if description.is_some() => $description)
             pub struct $name {
                 $(if input_fields.is_some() => $input_fields)
+                pub conn: $connect_params,
+                pub proc: $arc<$child>,
+                pub selection: $selection,
             }
 
             impl $name {
-                $(if fields.is_some() => $fields)
+                $(if fields.is_some() => $(fields.map(|f| f.1)))
             }
         };
 
@@ -85,9 +95,18 @@ mod tests {
             enum_values: None,
             possible_types: None,
         };
-        let expected = r#"
+        let expected = r#"use crate::querybuilder::Selection;
+use dagger_core::connect_params::ConnectParams;
+use std::process::Child;
+use std::sync::Arc;
+
+
 /// A directory whose contents persists across sessions
-pub struct CacheVolume {}
+pub struct CacheVolume {
+    pub conn: ConnectParams,
+    pub proc: Arc<Child>,
+    pub selection: Selection,
+}
 
 impl CacheVolume {
     pub fn id(
@@ -168,7 +187,43 @@ impl CacheVolume {
             enum_values: None,
             possible_types: None,
         };
-        let expected = r#"
+        let expected = r#"use crate::querybuilder::Selection;
+use dagger_core::connect_params::ConnectParams;
+use std::process::Child;
+use std::sync::Arc;
+
+
+/// Loads a container from ID.
+/// Null ID returns an empty container (scratch).
+/// Optional platform argument initializes new containers to execute and publish as that platform. Platform defaults to that of the builder's host.
+pub struct ContainerArgs {
+    pub id: Option<ContainerID>,
+    pub platform: Option<Platform>,
+}
+
+pub struct Query {
+    pub conn: ConnectParams,
+    pub proc: Arc<Child>,
+    pub selection: Selection,
+}
+
+impl Query {
+    pub fn container(
+        &self,
+        args: &ContainerArgs
+    ) -> CacheID {
+        let query = self.selection.select("container");
+        query.args(args);
+
+        CacheID {
+            conn: self.conn.clone(),
+            proc: self.proc.clone(),
+            selection: query,
+        }
+
+        todo!()
+    }
+}
 "#;
         let handler = Object {};
         let obj = handler.render(&t).unwrap();
