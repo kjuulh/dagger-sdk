@@ -382,11 +382,7 @@ impl Container {
         let query = self.selection.select("envVariable");
         query.args(args);
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 
     pub fn env_variables(
@@ -420,11 +416,7 @@ impl Container {
     ) -> Option<Int> {
         let query = self.selection.select("exitCode");
 
-        Option<Int> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 
     pub fn export(
@@ -500,11 +492,7 @@ impl Container {
         let query = self.selection.select("label");
         query.args(args);
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 
     pub fn labels(
@@ -588,11 +576,7 @@ impl Container {
     ) -> Option<String> {
         let query = self.selection.select("stderr");
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 
     pub fn stdout(
@@ -600,11 +584,7 @@ impl Container {
     ) -> Option<String> {
         let query = self.selection.select("stdout");
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 
     pub fn user(
@@ -612,11 +592,7 @@ impl Container {
     ) -> Option<String> {
         let query = self.selection.select("user");
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 
     pub fn with_default_args(
@@ -946,11 +922,7 @@ impl Container {
     ) -> Option<String> {
         let query = self.selection.select("workdir");
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 }
 
@@ -1784,11 +1756,7 @@ impl Project {
     ) -> Option<String> {
         let query = self.selection.select("schema");
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 
     pub fn sdk(
@@ -1796,11 +1764,7 @@ impl Project {
     ) -> Option<String> {
         let query = self.selection.select("sdk");
 
-        Option<String> {
-            conn: self.conn.clone(),
-            proc: self.proc.clone(),
-            selection: query,
-        }
+        query.execute(&graphql_client(&self.conn)).unwrap()
     }
 }
 
