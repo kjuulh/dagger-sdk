@@ -28,7 +28,7 @@ impl Generator for RustGenerator {
                 visit_scalar: Arc::new({
                     let render = render.clone();
                     move |t| {
-                        let rendered_scalar = render_scalar()?;
+                        let rendered_scalar = render_scalar(t)?;
 
                         let mut render = render.lock().unwrap();
 
@@ -42,7 +42,7 @@ impl Generator for RustGenerator {
                     let render = render.clone();
 
                     move |t| {
-                        let rendered_scalar = render_object()?;
+                        let rendered_scalar = render_object(t)?;
 
                         let mut render = render.lock().unwrap();
 
@@ -56,7 +56,7 @@ impl Generator for RustGenerator {
                     let render = render.clone();
 
                     move |t| {
-                        let rendered_scalar = render_input()?;
+                        let rendered_scalar = render_input(t)?;
 
                         let mut render = render.lock().unwrap();
 
@@ -70,7 +70,7 @@ impl Generator for RustGenerator {
                     let render = render.clone();
 
                     move |t| {
-                        let rendered_scalar = render_enum()?;
+                        let rendered_scalar = render_enum(t)?;
 
                         let mut render = render.lock().unwrap();
 
