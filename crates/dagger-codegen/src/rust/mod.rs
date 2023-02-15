@@ -8,9 +8,11 @@ use dagger_core::introspection::Schema;
 use eyre::Context;
 use genco::prelude::rust;
 
+use crate::functions::CommonFunctions;
 use crate::generator::Generator;
 use crate::visitor::{VisitHandlers, Visitor};
 
+use self::format::FormatTypeFunc;
 use self::templates::enum_tmpl::render_enum;
 use self::templates::input_tmpl::render_input;
 use self::templates::object_tmpl::render_object;
@@ -21,6 +23,8 @@ pub struct RustGenerator {}
 impl Generator for RustGenerator {
     fn generate(&self, schema: Schema) -> eyre::Result<String> {
         let render = Arc::new(Mutex::new(rust::Tokens::new()));
+        let common_funcs = CommonFunctions::new(Arc::new(FormatTypeFunc {}));
+        println!("generating dagger for rust");
 
         let visitor = Visitor {
             schema,
@@ -28,12 +32,15 @@ impl Generator for RustGenerator {
                 visit_scalar: Arc::new({
                     let render = render.clone();
                     move |t| {
+                        println!("generating scalar");
                         let rendered_scalar = render_scalar(t)?;
 
                         let mut render = render.lock().unwrap();
 
                         render.append(rendered_scalar);
                         render.push();
+
+                        println!("generated scalar");
 
                         Ok(())
                     }
@@ -42,12 +49,14 @@ impl Generator for RustGenerator {
                     let render = render.clone();
 
                     move |t| {
+                        println!("generating object");
                         let rendered_scalar = render_object(t)?;
 
                         let mut render = render.lock().unwrap();
 
                         render.append(rendered_scalar);
                         render.push();
+                        println!("generated object");
 
                         Ok(())
                     }
@@ -56,12 +65,14 @@ impl Generator for RustGenerator {
                     let render = render.clone();
 
                     move |t| {
-                        let rendered_scalar = render_input(t)?;
+                        println!("generating input");
+                        let rendered_scalar = render_input(&common_funcs, t)?;
 
                         let mut render = render.lock().unwrap();
 
                         render.append(rendered_scalar);
                         render.push();
+                        println!("generated input");
 
                         Ok(())
                     }
@@ -70,12 +81,14 @@ impl Generator for RustGenerator {
                     let render = render.clone();
 
                     move |t| {
+                        println!("generating enum");
                         let rendered_scalar = render_enum(t)?;
 
                         let mut render = render.lock().unwrap();
 
                         render.append(rendered_scalar);
                         render.push();
+                        println!("generated enum");
 
                         Ok(())
                     }
@@ -84,6 +97,8 @@ impl Generator for RustGenerator {
         };
 
         visitor.run()?;
+
+        println!("done generating objects");
 
         let rendered = render.lock().unwrap();
 

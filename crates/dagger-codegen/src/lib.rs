@@ -1,6 +1,7 @@
 mod functions;
 mod generator;
 pub mod rust;
+pub mod utility;
 mod visitor;
 
 use dagger_core::introspection::Schema;

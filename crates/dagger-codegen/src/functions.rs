@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use dagger_core::introspection::{TypeRef, __TypeKind};
+use dagger_core::introspection::{FullType, InputValue, TypeRef, __TypeKind};
+
+use crate::utility::OptionExt;
 
 pub trait FormatTypeFuncs {
     fn format_kind_list(&self, representation: &str) -> String;
@@ -44,61 +46,65 @@ impl CommonFunctions {
         let mut representation = String::new();
         let mut r = Some(t.clone());
         while r.is_some() {
-            match r.as_ref() {
+            return match r.as_ref() {
                 Some(rf) => match rf.kind.as_ref() {
                     Some(k) => match k {
                         __TypeKind::SCALAR => match Scalar::from(rf) {
-                            Scalar::Int => {
-                                self.format_type_funcs
-                                    .format_kind_scalar_int(&mut representation);
-                            }
-                            Scalar::Float => {
-                                self.format_type_funcs
-                                    .format_kind_scalar_float(&mut representation);
-                            }
-                            Scalar::String => {
-                                self.format_type_funcs
-                                    .format_kind_scalar_string(&mut representation);
-                            }
-                            Scalar::Boolean => {
-                                self.format_type_funcs
-                                    .format_kind_scalar_boolean(&mut representation);
-                            }
-                            Scalar::Default => {
-                                self.format_type_funcs.format_kind_scalar_default(
-                                    &mut representation,
-                                    rf.name.as_ref().unwrap(),
-                                    input,
-                                );
-                            }
+                            Scalar::Int => self
+                                .format_type_funcs
+                                .format_kind_scalar_int(&mut representation),
+                            Scalar::Float => self
+                                .format_type_funcs
+                                .format_kind_scalar_float(&mut representation),
+                            Scalar::String => self
+                                .format_type_funcs
+                                .format_kind_scalar_string(&mut representation),
+                            Scalar::Boolean => self
+                                .format_type_funcs
+                                .format_kind_scalar_boolean(&mut representation),
+                            Scalar::Default => self.format_type_funcs.format_kind_scalar_default(
+                                &mut representation,
+                                rf.name.as_ref().unwrap(),
+                                input,
+                            ),
                         },
-                        __TypeKind::OBJECT => {
-                            self.format_type_funcs
-                                .format_kind_object(&mut representation, rf.name.as_ref().unwrap());
-                        }
-                        __TypeKind::ENUM => {
-                            self.format_type_funcs
-                                .format_kind_enum(&mut representation, rf.name.as_ref().unwrap());
-                        }
+                        __TypeKind::OBJECT => self
+                            .format_type_funcs
+                            .format_kind_object(&mut representation, rf.name.as_ref().unwrap()),
+                        __TypeKind::ENUM => self
+                            .format_type_funcs
+                            .format_kind_enum(&mut representation, rf.name.as_ref().unwrap()),
                         __TypeKind::INPUT_OBJECT => {
                             self.format_type_funcs.format_kind_input_object(
                                 &mut representation,
                                 &rf.name.as_ref().unwrap(),
-                            );
+                            )
                         }
                         __TypeKind::LIST => {
-                            self.format_type_funcs.format_kind_list(&mut representation);
+                            representation =
+                                self.format_type_funcs.format_kind_list(&mut representation);
+                            r = rf.of_type.as_ref().map(|t| t.clone()).map(|t| *t);
+                            continue;
+                        }
+                        __TypeKind::NON_NULL => {
+                            r = rf.of_type.as_ref().map(|t| t.clone()).map(|t| *t);
+                            continue;
                         }
                         __TypeKind::Other(_) => {
-                            r = rf.of_type.as_ref().map(|t| t.clone()).map(|t| *t)
+                            r = rf.of_type.as_ref().map(|t| t.clone()).map(|t| *t);
+                            continue;
                         }
-                        _ => {}
+                        __TypeKind::INTERFACE => break,
+                        __TypeKind::UNION => break,
                     },
                     None => break,
                 },
                 None => break,
-            }
+            };
         }
+
+        println!("rep: {}", representation);
+        println!("{:?}", t);
 
         representation
     }
@@ -122,5 +128,224 @@ impl From<&TypeRef> for Scalar {
             Some(_) => Scalar::Default,
             None => Scalar::Default,
         }
+    }
+}
+
+pub fn get_type_from_name<'t>(types: &'t [FullType], name: &'t str) -> Option<&'t FullType> {
+    types
+        .into_iter()
+        .find(|t| t.name.as_ref().map(|s| s.as_str()) == Some(name))
+}
+
+pub fn type_ref_is_optional(type_ref: &TypeRef) -> bool {
+    type_ref
+        .kind
+        .pipe(|k| *k != __TypeKind::NON_NULL)
+        .unwrap_or(false)
+}
+
+pub fn type_ref_is_scalar(type_ref: &TypeRef) -> bool {
+    type_ref
+        .kind
+        .pipe(|k| *k == __TypeKind::SCALAR)
+        .unwrap_or(false)
+}
+
+pub fn type_ref_is_object(type_ref: &TypeRef) -> bool {
+    type_ref
+        .kind
+        .pipe(|k| *k == __TypeKind::OBJECT)
+        .unwrap_or(false)
+}
+
+pub fn type_ref_is_list(type_ref: &TypeRef) -> bool {
+    type_ref
+        .kind
+        .pipe(|k| *k == __TypeKind::LIST)
+        .unwrap_or(false)
+}
+
+pub fn input_values_has_optionals(input_values: &[InputValue]) -> bool {
+    input_values
+        .into_iter()
+        .map(|k| type_ref_is_optional(&k.type_))
+        .filter(|k| *k)
+        .collect::<Vec<_>>()
+        .len()
+        > 0
+}
+
+pub fn input_values_is_empty(input_values: &[InputValue]) -> bool {
+    input_values.len() > 0
+}
+
+#[cfg(test)]
+mod test {
+    use dagger_core::introspection::{FullType, InputValue, TypeRef, __TypeKind};
+    use pretty_assertions::assert_eq;
+
+    use crate::functions::{input_values_has_optionals, type_ref_is_optional};
+
+    use super::get_type_from_name;
+
+    #[test]
+    fn get_type_from_name_has_no_item() {
+        let input = vec![];
+        let output = get_type_from_name(&input, "some-name");
+
+        assert_eq!(output.is_none(), true);
+    }
+
+    #[test]
+    fn get_type_from_name_has_item() {
+        let name = "some-name";
+        let input = vec![FullType {
+            kind: None,
+            name: Some(name.to_string()),
+            description: None,
+            fields: None,
+            input_fields: None,
+            interfaces: None,
+            enum_values: None,
+            possible_types: None,
+        }];
+        let output = get_type_from_name(&input, name);
+
+        assert_eq!(output.is_some(), true);
+    }
+
+    #[test]
+    fn get_type_from_name_has_item_multiple_entries() {
+        let name = "some-name";
+        let input = vec![
+            FullType {
+                kind: None,
+                name: Some(name.to_string()),
+                description: None,
+                fields: None,
+                input_fields: None,
+                interfaces: None,
+                enum_values: None,
+                possible_types: None,
+            },
+            FullType {
+                kind: None,
+                name: Some(name.to_string()),
+                description: None,
+                fields: None,
+                input_fields: None,
+                interfaces: None,
+                enum_values: None,
+                possible_types: None,
+            },
+        ];
+        let output = get_type_from_name(&input, name);
+
+        assert_eq!(output.is_some(), true);
+    }
+
+    #[test]
+    fn type_ref_is_optional_has_none() {
+        let input = TypeRef {
+            kind: None,
+            name: None,
+            of_type: None,
+        };
+        let output = type_ref_is_optional(&input);
+
+        assert_eq!(output, false);
+    }
+
+    #[test]
+    fn type_ref_is_optional_is_required() {
+        let input = TypeRef {
+            kind: Some(__TypeKind::NON_NULL),
+            name: None,
+            of_type: None,
+        };
+        let output = type_ref_is_optional(&input);
+
+        assert_eq!(output, false);
+    }
+
+    #[test]
+    fn type_ref_is_optional_is_optional() {
+        let input = TypeRef {
+            kind: Some(__TypeKind::OBJECT),
+            name: None,
+            of_type: None,
+        };
+        let output = type_ref_is_optional(&input);
+
+        assert_eq!(output, true);
+    }
+
+    #[test]
+    fn input_values_has_optionals_none() {
+        let input = vec![];
+
+        let output = input_values_has_optionals(&input);
+
+        assert_eq!(output, false);
+    }
+
+    #[test]
+    fn input_values_has_optionals_has_optional() {
+        let input = vec![
+            InputValue {
+                name: "some-name".to_string(),
+                description: None,
+                type_: TypeRef {
+                    kind: Some(__TypeKind::NON_NULL),
+                    name: None,
+                    of_type: None,
+                },
+                default_value: None,
+            },
+            InputValue {
+                name: "some-other-name".to_string(),
+                description: None,
+                type_: TypeRef {
+                    kind: Some(__TypeKind::OBJECT),
+                    name: None,
+                    of_type: None,
+                },
+                default_value: None,
+            },
+        ];
+
+        let output = input_values_has_optionals(&input);
+
+        assert_eq!(output, true);
+    }
+
+    #[test]
+    fn input_values_has_optionals_is_required() {
+        let input = vec![
+            InputValue {
+                name: "some-name".to_string(),
+                description: None,
+                type_: TypeRef {
+                    kind: Some(__TypeKind::NON_NULL),
+                    name: None,
+                    of_type: None,
+                },
+                default_value: None,
+            },
+            InputValue {
+                name: "some-other-name".to_string(),
+                description: None,
+                type_: TypeRef {
+                    kind: Some(__TypeKind::NON_NULL),
+                    name: None,
+                    of_type: None,
+                },
+                default_value: None,
+            },
+        ];
+
+        let output = input_values_has_optionals(&input);
+
+        assert_eq!(output, false);
     }
 }
