@@ -23,7 +23,7 @@ pub struct RustGenerator {}
 impl Generator for RustGenerator {
     fn generate(&self, schema: Schema) -> eyre::Result<String> {
         let render = Arc::new(Mutex::new(rust::Tokens::new()));
-        let common_funcs = CommonFunctions::new(Arc::new(FormatTypeFunc {}));
+        let common_funcs = Arc::new(CommonFunctions::new(Arc::new(FormatTypeFunc {})));
         println!("generating dagger for rust");
 
         let visitor = Visitor {
@@ -31,6 +31,8 @@ impl Generator for RustGenerator {
             handlers: VisitHandlers {
                 visit_scalar: Arc::new({
                     let render = render.clone();
+                    let common_funcs = common_funcs.clone();
+
                     move |t| {
                         println!("generating scalar");
                         let rendered_scalar = render_scalar(t)?;
@@ -47,10 +49,11 @@ impl Generator for RustGenerator {
                 }),
                 visit_object: Arc::new({
                     let render = render.clone();
+                    let common_funcs = common_funcs.clone();
 
                     move |t| {
                         println!("generating object");
-                        let rendered_scalar = render_object(t)?;
+                        let rendered_scalar = render_object(&common_funcs, t)?;
 
                         let mut render = render.lock().unwrap();
 
@@ -63,6 +66,7 @@ impl Generator for RustGenerator {
                 }),
                 visit_input: Arc::new({
                     let render = render.clone();
+                    let common_funcs = common_funcs.clone();
 
                     move |t| {
                         println!("generating input");
@@ -79,6 +83,7 @@ impl Generator for RustGenerator {
                 }),
                 visit_enum: Arc::new({
                     let render = render.clone();
+                    let common_funcs = common_funcs.clone();
 
                     move |t| {
                         println!("generating enum");
