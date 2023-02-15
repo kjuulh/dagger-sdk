@@ -3,7 +3,7 @@ use genco::prelude::rust;
 use genco::quote;
 
 use crate::functions::CommonFunctions;
-use crate::rust::functions::format_name;
+use crate::rust::functions::{format_name, format_struct_name};
 
 pub fn render_input(funcs: &CommonFunctions, t: &FullType) -> eyre::Result<rust::Tokens> {
     Ok(quote! {
@@ -30,6 +30,6 @@ pub fn render_input_fields(
 
 pub fn render_input_field(funcs: &CommonFunctions, field: &FullTypeInputFields) -> rust::Tokens {
     quote! {
-        $(&field.input_value.name): $(funcs.format_input_type(&field.input_value.type_))
+        pub $(format_struct_name(&field.input_value.name)): $(funcs.format_input_type(&field.input_value.type_)),
     }
 }

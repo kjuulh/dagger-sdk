@@ -81,10 +81,18 @@ impl CommonFunctions {
                             )
                         }
                         __TypeKind::LIST => {
+                            let mut inner_type = rf
+                                .of_type
+                                .as_ref()
+                                .map(|t| t.clone())
+                                .map(|t| *t)
+                                .map(|t| self.format_type(&t, input))
+                                .unwrap();
+
                             representation =
-                                self.format_type_funcs.format_kind_list(&mut representation);
-                            r = rf.of_type.as_ref().map(|t| t.clone()).map(|t| *t);
-                            continue;
+                                self.format_type_funcs.format_kind_list(&mut inner_type);
+
+                            return representation;
                         }
                         __TypeKind::NON_NULL => {
                             r = rf.of_type.as_ref().map(|t| t.clone()).map(|t| *t);

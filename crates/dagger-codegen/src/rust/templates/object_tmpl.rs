@@ -67,7 +67,7 @@ fn render_optional_field_args(
     }
     let rendered_args = args.into_iter().map(|a| &a.input_value).map(|a| {
         quote! {
-            pub $(format_struct_name(&a.name)): $(funcs.format_output_type(&a.type_))
+            pub $(format_struct_name(&a.name)): $(funcs.format_output_type(&a.type_)),
         }
     });
 
