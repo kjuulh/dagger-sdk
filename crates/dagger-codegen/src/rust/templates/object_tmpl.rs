@@ -1,9 +1,9 @@
-use dagger_core::introspection::{FullType, FullTypeFields};
+use dagger_core::introspection::{FullType, FullTypeFields, FullTypeFieldsArgs};
 use genco::prelude::rust;
 use genco::quote;
 
 use crate::functions::CommonFunctions;
-use crate::rust::functions::{field_options_struct_name, format_name};
+use crate::rust::functions::{field_options_struct_name, format_name, format_struct_name};
 use crate::utility::OptionExt;
 
 pub fn render_object(funcs: &CommonFunctions, t: &FullType) -> eyre::Result<rust::Tokens> {
@@ -40,12 +40,38 @@ fn render_optional_args(
 }
 
 fn render_optional_arg(funcs: &CommonFunctions, field: &FullTypeFields) -> Option<rust::Tokens> {
-    field
-        .type_
-        .pipe(|t| funcs.format_output_type(&t.type_ref))
-        .pipe(|f| {
-            quote! {
-                $f
+    let output_type = field_options_struct_name(field);
+    let fields = field
+        .args
+        .pipe(|t| t.into_iter().flatten().collect::<Vec<_>>())
+        .pipe(|t| render_optional_field_args(funcs, t))
+        .flatten();
+
+    if let Some(fields) = fields {
+        Some(quote! {
+            pub struct $output_type {
+                $fields
             }
         })
+    } else {
+        None
+    }
+}
+
+fn render_optional_field_args(
+    funcs: &CommonFunctions,
+    args: &Vec<&FullTypeFieldsArgs>,
+) -> Option<rust::Tokens> {
+    if args.len() == 0 {
+        return None;
+    }
+    let rendered_args = args.into_iter().map(|a| &a.input_value).map(|a| {
+        quote! {
+            pub $(format_struct_name(&a.name)): $(funcs.format_output_type(&a.type_))
+        }
+    });
+
+    Some(quote! {
+        $(for arg in rendered_args join ($['\r']) => $arg)
+    })
 }
