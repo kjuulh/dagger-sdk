@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use dagger_core::introspection::{FullType, InputValue, TypeRef, __TypeKind};
+use eyre::ContextCompat;
 
 use crate::utility::OptionExt;
 
@@ -87,6 +88,7 @@ impl CommonFunctions {
                                 .map(|t| t.clone())
                                 .map(|t| *t)
                                 .map(|t| self.format_type(&t, input))
+                                .context("could not get inner type of list")
                                 .unwrap();
 
                             representation =
