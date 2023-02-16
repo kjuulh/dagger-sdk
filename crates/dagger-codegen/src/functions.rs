@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use dagger_core::introspection::{FullType, InputValue, TypeRef, __TypeKind};
+use dagger_core::introspection::{FullType, FullTypeFields, InputValue, TypeRef, __TypeKind};
 use eyre::ContextCompat;
 
 use crate::utility::OptionExt;
@@ -154,6 +154,19 @@ pub fn type_ref_is_optional(type_ref: &TypeRef) -> bool {
         .unwrap_or(false)
 }
 
+pub fn type_field_has_optional(field: &FullTypeFields) -> bool {
+    field
+        .args
+        .pipe(|a| {
+            a.iter()
+                .map(|a| a.pipe(|a| &a.input_value))
+                .flatten()
+                .collect::<Vec<_>>()
+        })
+        .pipe(|s| input_values_has_optionals(s.as_slice()))
+        .unwrap_or(false)
+}
+
 pub fn type_ref_is_scalar(type_ref: &TypeRef) -> bool {
     type_ref
         .kind
@@ -175,7 +188,7 @@ pub fn type_ref_is_list(type_ref: &TypeRef) -> bool {
         .unwrap_or(false)
 }
 
-pub fn input_values_has_optionals(input_values: &[InputValue]) -> bool {
+pub fn input_values_has_optionals(input_values: &[&InputValue]) -> bool {
     input_values
         .into_iter()
         .map(|k| type_ref_is_optional(&k.type_))
@@ -324,7 +337,7 @@ mod test {
             },
         ];
 
-        let output = input_values_has_optionals(&input);
+        let output = input_values_has_optionals(input.iter().collect::<Vec<_>>().as_slice());
 
         assert_eq!(output, true);
     }
@@ -354,7 +367,7 @@ mod test {
             },
         ];
 
-        let output = input_values_has_optionals(&input);
+        let output = input_values_has_optionals(input.iter().collect::<Vec<_>>().as_slice());
 
         assert_eq!(output, false);
     }

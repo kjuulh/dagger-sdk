@@ -40,7 +40,7 @@ impl FormatTypeFuncs for FormatTypeFunc {
         input: bool,
     ) -> String {
         let mut rep = representation.to_string();
-        rep.push_str(ref_name);
+        rep.push_str(&format_name(ref_name));
         rep
     }
 
@@ -58,7 +58,7 @@ impl FormatTypeFuncs for FormatTypeFunc {
 
     fn format_kind_enum(&self, representation: &str, ref_name: &str) -> String {
         let mut rep = representation.to_string();
-        rep.push_str(ref_name);
+        rep.push_str(&format_name(ref_name));
         rep
     }
 }
