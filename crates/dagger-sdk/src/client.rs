@@ -18,7 +18,6 @@ pub fn connect() -> eyre::Result<DaggerConn> {
     let (conn, proc) = DaggerEngine::new().start(&cfg)?;
 
     Ok(Arc::new(Query {
-        conn,
         proc: Arc::new(proc),
         selection: query(),
     }))

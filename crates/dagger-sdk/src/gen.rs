@@ -1,4 +1,6 @@
+use crate::client::graphql_client;
 use crate::querybuilder::Selection;
+use dagger_core::connect_params::ConnectParams;
 use serde::{Deserialize, Serialize};
 use std::process::Child;
 use std::sync::Arc;
@@ -19,24 +21,26 @@ pub struct SecretId(String);
 pub struct SocketId(String);
 #[derive(Serialize, Deserialize)]
 pub struct BuildArg {
-    pub name: String,
     pub value: String,
+    pub name: String,
 }
 pub struct CacheVolume {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl CacheVolume {
     pub fn id(&self) -> CacheId {
         let mut query = self.selection.select("id");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct Container {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 pub struct ContainerBuildOpts {
@@ -88,120 +92,131 @@ impl Container {
     pub fn build(&self, context: DirectoryId, opts: Option<ContainerBuildOpts>) -> Container {
         let mut query = self.selection.select("build");
 
-        query.arg("context", context);
+        query = query.arg("context", context).unwrap();
         if let Some(opts) = opts {
             if let Some(dockerfile) = opts.dockerfile {
-                query.arg("dockerfile", dockerfile);
+                query = query.arg("dockerfile", dockerfile).unwrap();
             }
             if let Some(build_args) = opts.build_args {
-                query.arg("buildArgs", build_args);
+                query = query.arg("buildArgs", build_args).unwrap();
             }
             if let Some(target) = opts.target {
-                query.arg("target", target);
+                query = query.arg("target", target).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn default_args(&self) -> Vec<String> {
         let mut query = self.selection.select("defaultArgs");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn directory(&self, path: String) -> Directory {
         let mut query = self.selection.select("directory");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn entrypoint(&self) -> Vec<String> {
         let mut query = self.selection.select("entrypoint");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn env_variable(&self, name: String) -> String {
         let mut query = self.selection.select("envVariable");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn env_variables(&self) -> Vec<EnvVariable> {
         let mut query = self.selection.select("envVariables");
 
-        selection.execute()
+        return vec![EnvVariable {
+            proc: self.proc.clone(),
+            selection: query,
+            conn: self.conn.clone(),
+        }];
     }
     pub fn exec(&self, opts: Option<ContainerExecOpts>) -> Container {
         let mut query = self.selection.select("exec");
 
         if let Some(opts) = opts {
             if let Some(args) = opts.args {
-                query.arg("args", args);
+                query = query.arg("args", args).unwrap();
             }
             if let Some(stdin) = opts.stdin {
-                query.arg("stdin", stdin);
+                query = query.arg("stdin", stdin).unwrap();
             }
             if let Some(redirect_stdout) = opts.redirect_stdout {
-                query.arg("redirectStdout", redirect_stdout);
+                query = query.arg("redirectStdout", redirect_stdout).unwrap();
             }
             if let Some(redirect_stderr) = opts.redirect_stderr {
-                query.arg("redirectStderr", redirect_stderr);
+                query = query.arg("redirectStderr", redirect_stderr).unwrap();
             }
             if let Some(experimental_privileged_nesting) = opts.experimental_privileged_nesting {
-                query.arg(
-                    "experimentalPrivilegedNesting",
-                    experimental_privileged_nesting,
-                );
+                query = query
+                    .arg(
+                        "experimentalPrivilegedNesting",
+                        experimental_privileged_nesting,
+                    )
+                    .unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn exit_code(&self) -> isize {
         let mut query = self.selection.select("exitCode");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn export(&self, path: String, opts: Option<ContainerExportOpts>) -> bool {
         let mut query = self.selection.select("export");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
         if let Some(opts) = opts {
             if let Some(platform_variants) = opts.platform_variants {
-                query.arg("platformVariants", platform_variants);
+                query = query.arg("platformVariants", platform_variants).unwrap();
             }
         }
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn file(&self, path: String) -> File {
         let mut query = self.selection.select("file");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return File {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn from(&self, address: String) -> Container {
         let mut query = self.selection.select("from");
 
-        query.arg("address", address);
+        query = query.arg("address", address).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn fs(&self) -> Directory {
@@ -210,61 +225,67 @@ impl Container {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn id(&self) -> ContainerId {
         let mut query = self.selection.select("id");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn label(&self, name: String) -> String {
         let mut query = self.selection.select("label");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn labels(&self) -> Vec<Label> {
         let mut query = self.selection.select("labels");
 
-        selection.execute()
+        return vec![Label {
+            proc: self.proc.clone(),
+            selection: query,
+            conn: self.conn.clone(),
+        }];
     }
     pub fn mounts(&self) -> Vec<String> {
         let mut query = self.selection.select("mounts");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn pipeline(&self, name: String, opts: Option<ContainerPipelineOpts>) -> Container {
         let mut query = self.selection.select("pipeline");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
         if let Some(opts) = opts {
             if let Some(description) = opts.description {
-                query.arg("description", description);
+                query = query.arg("description", description).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn platform(&self) -> Platform {
         let mut query = self.selection.select("platform");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn publish(&self, address: String, opts: Option<ContainerPublishOpts>) -> String {
         let mut query = self.selection.select("publish");
 
-        query.arg("address", address);
+        query = query.arg("address", address).unwrap();
         if let Some(opts) = opts {
             if let Some(platform_variants) = opts.platform_variants {
-                query.arg("platformVariants", platform_variants);
+                query = query.arg("platformVariants", platform_variants).unwrap();
             }
         }
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn rootfs(&self) -> Directory {
         let mut query = self.selection.select("rootfs");
@@ -272,35 +293,37 @@ impl Container {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn stderr(&self) -> String {
         let mut query = self.selection.select("stderr");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn stdout(&self) -> String {
         let mut query = self.selection.select("stdout");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn user(&self) -> String {
         let mut query = self.selection.select("user");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn with_default_args(&self, opts: Option<ContainerWithDefaultArgsOpts>) -> Container {
         let mut query = self.selection.select("withDefaultArgs");
 
         if let Some(opts) = opts {
             if let Some(args) = opts.args {
-                query.arg("args", args);
+                query = query.arg("args", args).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_directory(
@@ -311,78 +334,85 @@ impl Container {
     ) -> Container {
         let mut query = self.selection.select("withDirectory");
 
-        query.arg("path", path);
-        query.arg("directory", directory);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("directory", directory).unwrap();
         if let Some(opts) = opts {
             if let Some(exclude) = opts.exclude {
-                query.arg("exclude", exclude);
+                query = query.arg("exclude", exclude).unwrap();
             }
             if let Some(include) = opts.include {
-                query.arg("include", include);
+                query = query.arg("include", include).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_entrypoint(&self, args: Vec<String>) -> Container {
         let mut query = self.selection.select("withEntrypoint");
 
-        query.arg("args", args);
+        query = query.arg("args", args).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_env_variable(&self, name: String, value: String) -> Container {
         let mut query = self.selection.select("withEnvVariable");
 
-        query.arg("name", name);
-        query.arg("value", value);
+        query = query.arg("name", name).unwrap();
+        query = query.arg("value", value).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_exec(&self, args: Vec<String>, opts: Option<ContainerWithExecOpts>) -> Container {
         let mut query = self.selection.select("withExec");
 
-        query.arg("args", args);
+        query = query.arg("args", args).unwrap();
         if let Some(opts) = opts {
             if let Some(stdin) = opts.stdin {
-                query.arg("stdin", stdin);
+                query = query.arg("stdin", stdin).unwrap();
             }
             if let Some(redirect_stdout) = opts.redirect_stdout {
-                query.arg("redirectStdout", redirect_stdout);
+                query = query.arg("redirectStdout", redirect_stdout).unwrap();
             }
             if let Some(redirect_stderr) = opts.redirect_stderr {
-                query.arg("redirectStderr", redirect_stderr);
+                query = query.arg("redirectStderr", redirect_stderr).unwrap();
             }
             if let Some(experimental_privileged_nesting) = opts.experimental_privileged_nesting {
-                query.arg(
-                    "experimentalPrivilegedNesting",
-                    experimental_privileged_nesting,
-                );
+                query = query
+                    .arg(
+                        "experimentalPrivilegedNesting",
+                        experimental_privileged_nesting,
+                    )
+                    .unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_fs(&self, id: DirectoryId) -> Container {
         let mut query = self.selection.select("withFS");
 
-        query.arg("id", id);
+        query = query.arg("id", id).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_file(
@@ -393,28 +423,30 @@ impl Container {
     ) -> Container {
         let mut query = self.selection.select("withFile");
 
-        query.arg("path", path);
-        query.arg("source", source);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("source", source).unwrap();
         if let Some(opts) = opts {
             if let Some(permissions) = opts.permissions {
-                query.arg("permissions", permissions);
+                query = query.arg("permissions", permissions).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_label(&self, name: String, value: String) -> Container {
         let mut query = self.selection.select("withLabel");
 
-        query.arg("name", name);
-        query.arg("value", value);
+        query = query.arg("name", name).unwrap();
+        query = query.arg("value", value).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_mounted_cache(
@@ -425,181 +457,197 @@ impl Container {
     ) -> Container {
         let mut query = self.selection.select("withMountedCache");
 
-        query.arg("path", path);
-        query.arg("cache", cache);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("cache", cache).unwrap();
         if let Some(opts) = opts {
             if let Some(source) = opts.source {
-                query.arg("source", source);
+                query = query.arg("source", source).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_mounted_directory(&self, path: String, source: DirectoryId) -> Container {
         let mut query = self.selection.select("withMountedDirectory");
 
-        query.arg("path", path);
-        query.arg("source", source);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("source", source).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_mounted_file(&self, path: String, source: FileId) -> Container {
         let mut query = self.selection.select("withMountedFile");
 
-        query.arg("path", path);
-        query.arg("source", source);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("source", source).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_mounted_secret(&self, path: String, source: SecretId) -> Container {
         let mut query = self.selection.select("withMountedSecret");
 
-        query.arg("path", path);
-        query.arg("source", source);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("source", source).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_mounted_temp(&self, path: String) -> Container {
         let mut query = self.selection.select("withMountedTemp");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_new_file(&self, path: String, opts: Option<ContainerWithNewFileOpts>) -> Container {
         let mut query = self.selection.select("withNewFile");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
         if let Some(opts) = opts {
             if let Some(contents) = opts.contents {
-                query.arg("contents", contents);
+                query = query.arg("contents", contents).unwrap();
             }
             if let Some(permissions) = opts.permissions {
-                query.arg("permissions", permissions);
+                query = query.arg("permissions", permissions).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_rootfs(&self, id: DirectoryId) -> Container {
         let mut query = self.selection.select("withRootfs");
 
-        query.arg("id", id);
+        query = query.arg("id", id).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_secret_variable(&self, name: String, secret: SecretId) -> Container {
         let mut query = self.selection.select("withSecretVariable");
 
-        query.arg("name", name);
-        query.arg("secret", secret);
+        query = query.arg("name", name).unwrap();
+        query = query.arg("secret", secret).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_unix_socket(&self, path: String, source: SocketId) -> Container {
         let mut query = self.selection.select("withUnixSocket");
 
-        query.arg("path", path);
-        query.arg("source", source);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("source", source).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_user(&self, name: String) -> Container {
         let mut query = self.selection.select("withUser");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_workdir(&self, path: String) -> Container {
         let mut query = self.selection.select("withWorkdir");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn without_env_variable(&self, name: String) -> Container {
         let mut query = self.selection.select("withoutEnvVariable");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn without_label(&self, name: String) -> Container {
         let mut query = self.selection.select("withoutLabel");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn without_mount(&self, path: String) -> Container {
         let mut query = self.selection.select("withoutMount");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn without_unix_socket(&self, path: String) -> Container {
         let mut query = self.selection.select("withoutUnixSocket");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn workdir(&self) -> String {
         let mut query = self.selection.select("workdir");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct Directory {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 pub struct DirectoryDockerBuildOpts {
@@ -632,21 +680,23 @@ impl Directory {
     pub fn diff(&self, other: DirectoryId) -> Directory {
         let mut query = self.selection.select("diff");
 
-        query.arg("other", other);
+        query = query.arg("other", other).unwrap();
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn directory(&self, path: String) -> Directory {
         let mut query = self.selection.select("directory");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn docker_build(&self, opts: Option<DirectoryDockerBuildOpts>) -> Container {
@@ -654,22 +704,23 @@ impl Directory {
 
         if let Some(opts) = opts {
             if let Some(dockerfile) = opts.dockerfile {
-                query.arg("dockerfile", dockerfile);
+                query = query.arg("dockerfile", dockerfile).unwrap();
             }
             if let Some(platform) = opts.platform {
-                query.arg("platform", platform);
+                query = query.arg("platform", platform).unwrap();
             }
             if let Some(build_args) = opts.build_args {
-                query.arg("buildArgs", build_args);
+                query = query.arg("buildArgs", build_args).unwrap();
             }
             if let Some(target) = opts.target {
-                query.arg("target", target);
+                query = query.arg("target", target).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn entries(&self, opts: Option<DirectoryEntriesOpts>) -> Vec<String> {
@@ -677,57 +728,60 @@ impl Directory {
 
         if let Some(opts) = opts {
             if let Some(path) = opts.path {
-                query.arg("path", path);
+                query = query.arg("path", path).unwrap();
             }
         }
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn export(&self, path: String) -> bool {
         let mut query = self.selection.select("export");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn file(&self, path: String) -> File {
         let mut query = self.selection.select("file");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return File {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn id(&self) -> DirectoryId {
         let mut query = self.selection.select("id");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn load_project(&self, config_path: String) -> Project {
         let mut query = self.selection.select("loadProject");
 
-        query.arg("configPath", config_path);
+        query = query.arg("configPath", config_path).unwrap();
 
         return Project {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn pipeline(&self, name: String, opts: Option<DirectoryPipelineOpts>) -> Directory {
         let mut query = self.selection.select("pipeline");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
         if let Some(opts) = opts {
             if let Some(description) = opts.description {
-                query.arg("description", description);
+                query = query.arg("description", description).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_directory(
@@ -738,20 +792,21 @@ impl Directory {
     ) -> Directory {
         let mut query = self.selection.select("withDirectory");
 
-        query.arg("path", path);
-        query.arg("directory", directory);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("directory", directory).unwrap();
         if let Some(opts) = opts {
             if let Some(exclude) = opts.exclude {
-                query.arg("exclude", exclude);
+                query = query.arg("exclude", exclude).unwrap();
             }
             if let Some(include) = opts.include {
-                query.arg("include", include);
+                query = query.arg("include", include).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_file(
@@ -762,17 +817,18 @@ impl Directory {
     ) -> Directory {
         let mut query = self.selection.select("withFile");
 
-        query.arg("path", path);
-        query.arg("source", source);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("source", source).unwrap();
         if let Some(opts) = opts {
             if let Some(permissions) = opts.permissions {
-                query.arg("permissions", permissions);
+                query = query.arg("permissions", permissions).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_new_directory(
@@ -782,16 +838,17 @@ impl Directory {
     ) -> Directory {
         let mut query = self.selection.select("withNewDirectory");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
         if let Some(opts) = opts {
             if let Some(permissions) = opts.permissions {
-                query.arg("permissions", permissions);
+                query = query.arg("permissions", permissions).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_new_file(
@@ -802,89 +859,95 @@ impl Directory {
     ) -> Directory {
         let mut query = self.selection.select("withNewFile");
 
-        query.arg("path", path);
-        query.arg("contents", contents);
+        query = query.arg("path", path).unwrap();
+        query = query.arg("contents", contents).unwrap();
         if let Some(opts) = opts {
             if let Some(permissions) = opts.permissions {
-                query.arg("permissions", permissions);
+                query = query.arg("permissions", permissions).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn with_timestamps(&self, timestamp: isize) -> Directory {
         let mut query = self.selection.select("withTimestamps");
 
-        query.arg("timestamp", timestamp);
+        query = query.arg("timestamp", timestamp).unwrap();
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn without_directory(&self, path: String) -> Directory {
         let mut query = self.selection.select("withoutDirectory");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn without_file(&self, path: String) -> Directory {
         let mut query = self.selection.select("withoutFile");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
 }
 pub struct EnvVariable {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl EnvVariable {
     pub fn name(&self) -> String {
         let mut query = self.selection.select("name");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn value(&self) -> String {
         let mut query = self.selection.select("value");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct File {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl File {
     pub fn contents(&self) -> String {
         let mut query = self.selection.select("contents");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn export(&self, path: String) -> bool {
         let mut query = self.selection.select("export");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn id(&self) -> FileId {
         let mut query = self.selection.select("id");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn secret(&self) -> Secret {
         let mut query = self.selection.select("secret");
@@ -892,27 +955,30 @@ impl File {
         return Secret {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn size(&self) -> isize {
         let mut query = self.selection.select("size");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn with_timestamps(&self, timestamp: isize) -> File {
         let mut query = self.selection.select("withTimestamps");
 
-        query.arg("timestamp", timestamp);
+        query = query.arg("timestamp", timestamp).unwrap();
 
         return File {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
 }
 pub struct GitRef {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 pub struct GitRefTreeOpts {
@@ -924,76 +990,82 @@ impl GitRef {
     pub fn digest(&self) -> String {
         let mut query = self.selection.select("digest");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn tree(&self, opts: Option<GitRefTreeOpts>) -> Directory {
         let mut query = self.selection.select("tree");
 
         if let Some(opts) = opts {
             if let Some(ssh_known_hosts) = opts.ssh_known_hosts {
-                query.arg("sshKnownHosts", ssh_known_hosts);
+                query = query.arg("sshKnownHosts", ssh_known_hosts).unwrap();
             }
             if let Some(ssh_auth_socket) = opts.ssh_auth_socket {
-                query.arg("sshAuthSocket", ssh_auth_socket);
+                query = query.arg("sshAuthSocket", ssh_auth_socket).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
 }
 pub struct GitRepository {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl GitRepository {
     pub fn branch(&self, name: String) -> GitRef {
         let mut query = self.selection.select("branch");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
         return GitRef {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn branches(&self) -> Vec<String> {
         let mut query = self.selection.select("branches");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn commit(&self, id: String) -> GitRef {
         let mut query = self.selection.select("commit");
 
-        query.arg("id", id);
+        query = query.arg("id", id).unwrap();
 
         return GitRef {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn tag(&self, name: String) -> GitRef {
         let mut query = self.selection.select("tag");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
         return GitRef {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn tags(&self) -> Vec<String> {
         let mut query = self.selection.select("tags");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct Host {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 pub struct HostDirectoryOpts {
@@ -1009,39 +1081,42 @@ impl Host {
     pub fn directory(&self, path: String, opts: Option<HostDirectoryOpts>) -> Directory {
         let mut query = self.selection.select("directory");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
         if let Some(opts) = opts {
             if let Some(exclude) = opts.exclude {
-                query.arg("exclude", exclude);
+                query = query.arg("exclude", exclude).unwrap();
             }
             if let Some(include) = opts.include {
-                query.arg("include", include);
+                query = query.arg("include", include).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn env_variable(&self, name: String) -> HostVariable {
         let mut query = self.selection.select("envVariable");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
         return HostVariable {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn unix_socket(&self, path: String) -> Socket {
         let mut query = self.selection.select("unixSocket");
 
-        query.arg("path", path);
+        query = query.arg("path", path).unwrap();
 
         return Socket {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn workdir(&self, opts: Option<HostWorkdirOpts>) -> Directory {
@@ -1049,22 +1124,24 @@ impl Host {
 
         if let Some(opts) = opts {
             if let Some(exclude) = opts.exclude {
-                query.arg("exclude", exclude);
+                query = query.arg("exclude", exclude).unwrap();
             }
             if let Some(include) = opts.include {
-                query.arg("include", include);
+                query = query.arg("include", include).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
 }
 pub struct HostVariable {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl HostVariable {
@@ -1074,41 +1151,48 @@ impl HostVariable {
         return Secret {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn value(&self) -> String {
         let mut query = self.selection.select("value");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct Label {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl Label {
     pub fn name(&self) -> String {
         let mut query = self.selection.select("name");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn value(&self) -> String {
         let mut query = self.selection.select("value");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct Project {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl Project {
     pub fn extensions(&self) -> Vec<Project> {
         let mut query = self.selection.select("extensions");
 
-        selection.execute()
+        return vec![Project {
+            proc: self.proc.clone(),
+            selection: query,
+            conn: self.conn.clone(),
+        }];
     }
     pub fn generated_code(&self) -> Directory {
         let mut query = self.selection.select("generatedCode");
@@ -1116,32 +1200,34 @@ impl Project {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn install(&self) -> bool {
         let mut query = self.selection.select("install");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn name(&self) -> String {
         let mut query = self.selection.select("name");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn schema(&self) -> String {
         let mut query = self.selection.select("schema");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn sdk(&self) -> String {
         let mut query = self.selection.select("sdk");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct Query {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 pub struct QueryContainerOpts {
@@ -1165,11 +1251,12 @@ impl Query {
     pub fn cache_volume(&self, key: String) -> CacheVolume {
         let mut query = self.selection.select("cacheVolume");
 
-        query.arg("key", key);
+        query = query.arg("key", key).unwrap();
 
         return CacheVolume {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn container(&self, opts: Option<QueryContainerOpts>) -> Container {
@@ -1177,60 +1264,64 @@ impl Query {
 
         if let Some(opts) = opts {
             if let Some(id) = opts.id {
-                query.arg("id", id);
+                query = query.arg("id", id).unwrap();
             }
             if let Some(platform) = opts.platform {
-                query.arg("platform", platform);
+                query = query.arg("platform", platform).unwrap();
             }
         }
 
         return Container {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn default_platform(&self) -> Platform {
         let mut query = self.selection.select("defaultPlatform");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn directory(&self, opts: Option<QueryDirectoryOpts>) -> Directory {
         let mut query = self.selection.select("directory");
 
         if let Some(opts) = opts {
             if let Some(id) = opts.id {
-                query.arg("id", id);
+                query = query.arg("id", id).unwrap();
             }
         }
 
         return Directory {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn file(&self, id: FileId) -> File {
         let mut query = self.selection.select("file");
 
-        query.arg("id", id);
+        query = query.arg("id", id).unwrap();
 
         return File {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn git(&self, url: String, opts: Option<QueryGitOpts>) -> GitRepository {
         let mut query = self.selection.select("git");
 
-        query.arg("url", url);
+        query = query.arg("url", url).unwrap();
         if let Some(opts) = opts {
             if let Some(keep_git_dir) = opts.keep_git_dir {
-                query.arg("keepGitDir", keep_git_dir);
+                query = query.arg("keepGitDir", keep_git_dir).unwrap();
             }
         }
 
         return GitRepository {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn host(&self) -> Host {
@@ -1239,51 +1330,56 @@ impl Query {
         return Host {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn http(&self, url: String) -> File {
         let mut query = self.selection.select("http");
 
-        query.arg("url", url);
+        query = query.arg("url", url).unwrap();
 
         return File {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn pipeline(&self, name: String, opts: Option<QueryPipelineOpts>) -> Query {
         let mut query = self.selection.select("pipeline");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
         if let Some(opts) = opts {
             if let Some(description) = opts.description {
-                query.arg("description", description);
+                query = query.arg("description", description).unwrap();
             }
         }
 
         return Query {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn project(&self, name: String) -> Project {
         let mut query = self.selection.select("project");
 
-        query.arg("name", name);
+        query = query.arg("name", name).unwrap();
 
         return Project {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn secret(&self, id: SecretId) -> Secret {
         let mut query = self.selection.select("secret");
 
-        query.arg("id", id);
+        query = query.arg("id", id).unwrap();
 
         return Secret {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
     pub fn socket(&self, opts: Option<QuerySocketOpts>) -> Socket {
@@ -1291,42 +1387,45 @@ impl Query {
 
         if let Some(opts) = opts {
             if let Some(id) = opts.id {
-                query.arg("id", id);
+                query = query.arg("id", id).unwrap();
             }
         }
 
         return Socket {
             proc: self.proc.clone(),
             selection: query,
+            conn: self.conn.clone(),
         };
     }
 }
 pub struct Secret {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl Secret {
     pub fn id(&self) -> SecretId {
         let mut query = self.selection.select("id");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
     pub fn plaintext(&self) -> String {
         let mut query = self.selection.select("plaintext");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 pub struct Socket {
     pub proc: Arc<Child>,
     pub selection: Selection,
+    pub conn: ConnectParams,
 }
 
 impl Socket {
     pub fn id(&self) -> SocketId {
         let mut query = self.selection.select("id");
 
-        selection.execute()
+        query.execute(&graphql_client(&self.conn)).unwrap().unwrap()
     }
 }

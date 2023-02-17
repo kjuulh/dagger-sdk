@@ -5,8 +5,8 @@ use genco::quote;
 use genco::tokens::quoted;
 
 use crate::functions::{
-    type_field_has_optional, type_ref_is_list, type_ref_is_object, type_ref_is_optional,
-    type_ref_is_scalar, CommonFunctions,
+    type_field_has_optional, type_ref_is_list, type_ref_is_list_of_objects, type_ref_is_object,
+    type_ref_is_optional, type_ref_is_scalar, CommonFunctions,
 };
 use crate::utility::OptionExt;
 
@@ -67,7 +67,7 @@ fn render_required_args(funcs: &CommonFunctions, field: &FullTypeFields) -> Opti
                     let name = &s.input_value.name;
 
                     Some(quote! {
-                        query.arg($(quoted(name)), $(n));
+                        query = query.arg($(quoted(name)), $(n)).unwrap();
                     })
                 })
             })
@@ -98,7 +98,7 @@ fn render_optional_args(funcs: &CommonFunctions, field: &FullTypeFields) -> Opti
 
                     Some(quote! {
                         if let Some($(&n)) = opts.$(&n) {
-                            query.arg($(quoted(name)), $(&n));
+                            query = query.arg($(quoted(name)), $(&n)).unwrap();
                         }
                     })
                 })
@@ -128,13 +128,42 @@ fn render_execution(funcs: &CommonFunctions, field: &FullTypeFields) -> rust::To
         return quote! {
             return $(output_type) {
                 proc: self.proc.clone(),
-                selection: query
+                selection: query,
+                conn: self.conn.clone(),
             }
         };
     }
 
+    if let Some(true) = field
+        .type_
+        .pipe(|t| type_ref_is_list_of_objects(&t.type_ref))
+    {
+        let output_type = funcs.format_output_type(
+            &field
+                .type_
+                .as_ref()
+                .unwrap()
+                .type_ref
+                .of_type
+                .as_ref()
+                .unwrap()
+                .of_type
+                .as_ref()
+                .unwrap(),
+        );
+        return quote! {
+            return vec![$(output_type) {
+                proc: self.proc.clone(),
+                selection: query,
+                conn: self.conn.clone(),
+            }]
+        };
+    }
+
+    let graphql_client = rust::import("crate::client", "graphql_client");
+
     quote! {
-        selection.execute()
+        query.execute(&$graphql_client(&self.conn)).unwrap().unwrap()
     }
 }
 

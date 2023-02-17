@@ -11,12 +11,14 @@ use crate::utility::OptionExt;
 pub fn render_object(funcs: &CommonFunctions, t: &FullType) -> eyre::Result<rust::Tokens> {
     let selection = rust::import("crate::querybuilder", "Selection");
     let child = rust::import("std::process", "Child");
+    let conn = rust::import("dagger_core::connect_params", "ConnectParams");
     let arc = rust::import("std::sync", "Arc");
 
     Ok(quote! {
         pub struct $(t.name.pipe(|s| format_name(s))) {
             pub proc: $arc<$child>,
             pub selection: $selection,
+            pub conn: $conn,
         }
 
         $(t.fields.pipe(|f| render_optional_args(funcs, f)))
