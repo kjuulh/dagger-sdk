@@ -2,18 +2,21 @@ use dagger_core::introspection::{FullType, FullTypeFields, FullTypeFieldsArgs};
 use genco::prelude::rust;
 use genco::quote;
 
-use crate::functions::{
-    input_values_has_optionals, type_field_has_optional, type_ref_is_optional, CommonFunctions,
-};
+use crate::functions::{type_ref_is_optional, CommonFunctions};
 use crate::rust::functions::{
     field_options_struct_name, format_function, format_name, format_struct_name,
 };
 use crate::utility::OptionExt;
 
 pub fn render_object(funcs: &CommonFunctions, t: &FullType) -> eyre::Result<rust::Tokens> {
+    let selection = rust::import("crate::querybuilder", "Selection");
+    let child = rust::import("std::process", "Child");
+    let arc = rust::import("std::sync", "Arc");
+
     Ok(quote! {
         pub struct $(t.name.pipe(|s| format_name(s))) {
-
+            pub proc: $arc<$child>,
+            pub selection: $selection,
         }
 
         $(t.fields.pipe(|f| render_optional_args(funcs, f)))

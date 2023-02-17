@@ -168,6 +168,15 @@ pub fn type_field_has_optional(field: &FullTypeFields) -> bool {
 }
 
 pub fn type_ref_is_scalar(type_ref: &TypeRef) -> bool {
+    let mut type_ref = type_ref.clone();
+    if type_ref
+        .kind
+        .pipe(|k| *k == __TypeKind::NON_NULL)
+        .unwrap_or(false)
+    {
+        type_ref = *type_ref.of_type.unwrap().clone();
+    }
+
     type_ref
         .kind
         .pipe(|k| *k == __TypeKind::SCALAR)
@@ -175,6 +184,15 @@ pub fn type_ref_is_scalar(type_ref: &TypeRef) -> bool {
 }
 
 pub fn type_ref_is_object(type_ref: &TypeRef) -> bool {
+    let mut type_ref = type_ref.clone();
+    if type_ref
+        .kind
+        .pipe(|k| *k == __TypeKind::NON_NULL)
+        .unwrap_or(false)
+    {
+        type_ref = *type_ref.of_type.unwrap().clone();
+    }
+
     type_ref
         .kind
         .pipe(|k| *k == __TypeKind::OBJECT)
@@ -182,6 +200,15 @@ pub fn type_ref_is_object(type_ref: &TypeRef) -> bool {
 }
 
 pub fn type_ref_is_list(type_ref: &TypeRef) -> bool {
+    let mut type_ref = type_ref.clone();
+    if type_ref
+        .kind
+        .pipe(|k| *k == __TypeKind::NON_NULL)
+        .unwrap_or(false)
+    {
+        type_ref = *type_ref.of_type.unwrap().clone();
+    }
+
     type_ref
         .kind
         .pipe(|k| *k == __TypeKind::LIST)

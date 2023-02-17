@@ -6,7 +6,10 @@ use crate::functions::CommonFunctions;
 use crate::rust::functions::{format_name, format_struct_name};
 
 pub fn render_input(funcs: &CommonFunctions, t: &FullType) -> eyre::Result<rust::Tokens> {
+    let deserialize = rust::import("serde", "Deserialize");
+    let serialize = rust::import("serde", "Serialize");
     Ok(quote! {
+        #[derive($serialize, $deserialize)]
         pub struct $(format_name(t.name.as_ref().unwrap())) {
             $(render_input_fields(funcs, t.input_fields.as_ref().unwrap_or(&Vec::new())  ))
         }

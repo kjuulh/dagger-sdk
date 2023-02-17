@@ -2,9 +2,11 @@ use convert_case::{Case, Casing};
 use dagger_core::introspection::FullTypeFields;
 use genco::prelude::rust;
 use genco::quote;
+use genco::tokens::quoted;
 
 use crate::functions::{
-    input_values_has_optionals, type_field_has_optional, type_ref_is_optional, CommonFunctions,
+    type_field_has_optional, type_ref_is_list, type_ref_is_object, type_ref_is_optional,
+    type_ref_is_scalar, CommonFunctions,
 };
 use crate::utility::OptionExt;
 
@@ -41,9 +43,99 @@ pub fn format_function(funcs: &CommonFunctions, field: &FullTypeFields) -> Optio
         $(signature)(
             $(args)
         ) -> $(output_type) {
-            todo!()
+            let mut query = self.selection.select($(quoted(field.name.as_ref())));
+
+            $(render_required_args(funcs, field))
+            $(render_optional_args(funcs, field))
+
+            $(render_execution(funcs, field))
         }
     })
+}
+
+fn render_required_args(funcs: &CommonFunctions, field: &FullTypeFields) -> Option<rust::Tokens> {
+    if let Some(args) = field.args.as_ref() {
+        let args = args
+            .into_iter()
+            .map(|a| {
+                a.as_ref().and_then(|s| {
+                    if type_ref_is_optional(&s.input_value.type_) {
+                        return None;
+                    }
+
+                    let n = format_struct_name(&s.input_value.name);
+                    let name = &s.input_value.name;
+
+                    Some(quote! {
+                        query.arg($(quoted(name)), $(n));
+                    })
+                })
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+        let required_args = quote! {
+            $(for arg in args join ($['\r']) => $arg)
+        };
+
+        Some(required_args)
+    } else {
+        None
+    }
+}
+
+fn render_optional_args(funcs: &CommonFunctions, field: &FullTypeFields) -> Option<rust::Tokens> {
+    if let Some(args) = field.args.as_ref() {
+        let args = args
+            .into_iter()
+            .map(|a| {
+                a.as_ref().and_then(|s| {
+                    if !type_ref_is_optional(&s.input_value.type_) {
+                        return None;
+                    }
+
+                    let n = format_struct_name(&s.input_value.name);
+                    let name = &s.input_value.name;
+
+                    Some(quote! {
+                        if let Some($(&n)) = opts.$(&n) {
+                            query.arg($(quoted(name)), $(&n));
+                        }
+                    })
+                })
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+
+        if args.len() == 0 {
+            return None;
+        }
+
+        let required_args = quote! {
+            if let Some(opts) = opts {
+                $(for arg in args join ($['\r']) => $arg)
+            }
+        };
+
+        Some(required_args)
+    } else {
+        None
+    }
+}
+
+fn render_execution(funcs: &CommonFunctions, field: &FullTypeFields) -> rust::Tokens {
+    if let Some(true) = field.type_.pipe(|t| type_ref_is_object(&t.type_ref)) {
+        let output_type = funcs.format_output_type(&field.type_.as_ref().unwrap().type_ref);
+        return quote! {
+            return $(output_type) {
+                proc: self.proc.clone(),
+                selection: query
+            }
+        };
+    }
+
+    quote! {
+        selection.execute()
+    }
 }
 
 fn format_function_args(funcs: &CommonFunctions, field: &FullTypeFields) -> Option<rust::Tokens> {
