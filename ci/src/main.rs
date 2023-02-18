@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use dagger_sdk::gen::{Container, ContainerWithExecOpts, HostDirectoryOpts, Query};
+use dagger_sdk::gen::{Container, HostDirectoryOpts, Query};
 
 fn main() -> eyre::Result<()> {
     color_eyre::install().unwrap();
@@ -112,7 +112,7 @@ fn select_base_image(client: Arc<Query>) -> Container {
     src_dir
 }
 
-fn validate_pr(client: Arc<Query>, container: Container) -> eyre::Result<()> {
+fn validate_pr(_client: Arc<Query>, container: Container) -> eyre::Result<()> {
     container.with_exec(vec!["cargo".into(), "test".into(), "--all".into()], None);
 
     let exit = container.exit_code();
