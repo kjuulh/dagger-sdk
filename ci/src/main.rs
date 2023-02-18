@@ -8,6 +8,10 @@ fn main() -> eyre::Result<()> {
     let matches = clap::Command::new("ci")
         .subcommand_required(true)
         .subcommand(clap::Command::new("pr"))
+        .subcommand(
+            clap::Command::new("release")
+                .arg(clap::Arg::new("version").long("version").required(true)),
+        )
         .get_matches();
 
     let client = dagger_sdk::client::connect()?;
@@ -16,6 +20,7 @@ fn main() -> eyre::Result<()> {
 
     match matches.subcommand() {
         Some(("pr", _)) => return validate_pr(client, base),
+        Some(("release", subm)) => return release(client, base, subm),
         Some(_) => {
             panic!("invalid subcommand selected!")
         }
@@ -23,6 +28,63 @@ fn main() -> eyre::Result<()> {
             panic!("no command selected!")
         }
     }
+}
+
+fn release(
+    client: Arc<Query>,
+    base: Container,
+    subm: &clap::ArgMatches,
+) -> Result<(), color_eyre::Report> {
+    let version = subm.get_one::<String>("version").unwrap();
+
+    let container = base
+        .with_exec(
+            vec!["cargo".into(), "install".into(), "cargo-release".into()],
+            None,
+        )
+        .with_exec(
+            vec![
+                "cargo".into(),
+                "release".into(),
+                "version".into(),
+                "--workspace".into(),
+                "--execute".into(),
+                "--no-confirm".into(),
+                version.clone(),
+            ],
+            None,
+        )
+        .with_exec(
+            vec![
+                "cargo".into(),
+                "release".into(),
+                "replace".into(),
+                "--workspace".into(),
+                "--execute".into(),
+                "--no-confirm".into(),
+            ],
+            None,
+        )
+        .with_exec(
+            vec![
+                "cargo".into(),
+                "release".into(),
+                "publish".into(),
+                "--workspace".into(),
+                "--execute".into(),
+                "--no-verify".into(),
+                "--no-confirm".into(),
+            ],
+            None,
+        );
+    let exit = container.exit_code();
+    if exit != 0 {
+        eyre::bail!("container failed with non-zero exit code");
+    }
+
+    println!("validating pr succeeded!");
+
+    Ok(())
 }
 
 fn get_dependencies(client: Arc<Query>) -> Container {

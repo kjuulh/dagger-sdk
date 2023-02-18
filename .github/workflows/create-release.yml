@@ -16,6 +16,10 @@ jobs:
           changelog: CHANGELOG.md
           # (Optional) Create a draft release.
           # [default value: false]
-          draft: true
+          draft: false
           # (Required) GitHub token for creating GitHub Releases.
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update rust toolchain
+        run: rustup update stable && rustup default stable
+      - name: Run dagger [RELEASE]
+        run: cargo run -p ci -- release --version="${{github.ref_name}}"
