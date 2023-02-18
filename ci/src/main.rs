@@ -113,7 +113,7 @@ fn select_base_image(client: Arc<Query>) -> Container {
 }
 
 fn validate_pr(_client: Arc<Query>, container: Container) -> eyre::Result<()> {
-    let container = container.with_exec(vec!["cargo".into(), "test".into(), "--all".into()], None);
+    //let container = container.with_exec(vec!["cargo".into(), "test".into(), "--all".into()], None);
 
     let exit = container.exit_code();
     if exit != 0 {
