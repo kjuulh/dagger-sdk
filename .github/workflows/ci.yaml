@@ -9,5 +9,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - run: rustup update stable && rustup default stable
-      - run: cargo run -p ci -- pr
+      - name: Update rust toolchain
+        run: rustup update stable && rustup default stable
+      - name: Run dagger [CI]
+        run: cargo run -p ci -- pr
