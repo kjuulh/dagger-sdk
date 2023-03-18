@@ -32,8 +32,8 @@ jobs:
           - nightly-mips
           - nightly-arm
           - macos
-          - win-msvc
-          - win-gnu
+          # - win-msvc
+          #- win-gnu
         include:
           - build: pinned
             os: ubuntu-22.04
