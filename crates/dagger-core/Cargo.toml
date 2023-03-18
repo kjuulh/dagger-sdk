@@ -26,7 +26,7 @@ graphql_client = { version = "0.12.0", features = ["reqwest"] }
 hex = "0.4.3"
 hex-literal = "0.3.4"
 platform-info = "1.0.2"
-reqwest = { version = "0.11.14", features = ["stream", "deflate"] }
+reqwest = { version = "0.11.14", features = ["stream", "deflate", "native-tls-vendored"] }
 sha2 = "0.10.6"
 tar = "0.4.38"
 tempfile = "3.3.0"
