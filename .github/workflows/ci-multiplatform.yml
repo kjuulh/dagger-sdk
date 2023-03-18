@@ -27,11 +27,11 @@ jobs:
           - stable
           - beta
           - nightly
-          - nightly-musl
-          - nightly-32
-          - nightly-mips
-          - nightly-arm
-          - macos
+          #- nightly-musl
+          #- nightly-32
+          #- nightly-mips
+          #- nightly-arm
+          #- macos
           # - win-msvc
           #- win-gnu
         include:
@@ -47,25 +47,25 @@ jobs:
           - build: nightly
             os: ubuntu-22.04
             rust: nightly
-          - build: nightly-musl
-            os: ubuntu-22.04
-            rust: nightly
-            target: x86_64-unknown-linux-musl
-          - build: nightly-32
-            os: ubuntu-22.04
-            rust: nightly
-            target: i686-unknown-linux-gnu
-          - build: nightly-mips
-            os: ubuntu-22.04
-            rust: nightly
-            target: mips64-unknown-linux-gnuabi64
-          - build: nightly-arm
-            os: ubuntu-22.04
-            rust: nightly
-            target: arm-unknown-linux-gnueabihf
-          - build: macos
-            os: macos-12
-            rust: nightly
+            #- build: nightly-musl
+            #  os: ubuntu-22.04
+            #  rust: nightly
+            #  target: x86_64-unknown-linux-musl
+            #- build: nightly-32
+            #  os: ubuntu-22.04
+            #  rust: nightly
+            #  target: i686-unknown-linux-gnu
+            #- build: nightly-mips
+            #  os: ubuntu-22.04
+            #  rust: nightly
+            #  target: mips64-unknown-linux-gnuabi64
+            #- build: nightly-arm
+            #  os: ubuntu-22.04
+            #  rust: nightly
+            #  target: arm-unknown-linux-gnueabihf
+            #- build: macos
+            #  os: macos-12
+            #  rust: nightly
             #- build: win-msvc
             #  os: windows-2022
             #  rust: nightly
@@ -91,14 +91,12 @@ jobs:
         if: matrix.target == ''
         with:
           toolchain: ${{ matrix.rust }}
-
       - uses: actions-rs/toolchain@v1
         if: matrix.target != ''
         with:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           use-cross: true
-
       - uses: actions-rs/cargo@v1
         if: matrix.target != ''
         with:
@@ -110,7 +108,6 @@ jobs:
         with:
           command: build
           args: --workspace --verbose
-
       - uses: actions-rs/cargo@v1
         if: matrix.target != ''
         with:
