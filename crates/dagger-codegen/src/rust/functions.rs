@@ -278,10 +278,8 @@ fn render_execution(funcs: &CommonFunctions, field: &FullTypeFields) -> rust::To
         };
     }
 
-    let graphql_client = rust::import("crate::client", "graphql_client");
-
     quote! {
-        query.execute(&$graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 

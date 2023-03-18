@@ -1,6 +1,4 @@
-use crate::client::graphql_client;
 use crate::querybuilder::Selection;
-use dagger_core::connect_params::ConnectParams;
 use dagger_core::graphql_client::DynGraphQLClient;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -119,7 +117,6 @@ pub struct PipelineLabel {
 pub struct CacheVolume {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -127,14 +124,13 @@ impl CacheVolume {
     pub async fn id(&self) -> eyre::Result<CacheId> {
         let query = self.selection.select("id");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct Container {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -298,7 +294,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -326,7 +321,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -334,7 +328,7 @@ impl Container {
     pub async fn default_args(&self) -> eyre::Result<Vec<String>> {
         let query = self.selection.select("defaultArgs");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves a directory at the given path.
     /// Mounts are included.
@@ -350,7 +344,6 @@ impl Container {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -365,7 +358,7 @@ impl Container {
     pub async fn endpoint(&self) -> eyre::Result<String> {
         let query = self.selection.select("endpoint");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 
     /// Retrieves an endpoint that clients can use to reach this container.
@@ -386,13 +379,13 @@ impl Container {
             query = query.arg("scheme", scheme);
         }
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves entrypoint to be prepended to the arguments of all commands.
     pub async fn entrypoint(&self) -> eyre::Result<Vec<String>> {
         let query = self.selection.select("entrypoint");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the value of the specified environment variable.
     ///
@@ -404,7 +397,7 @@ impl Container {
 
         query = query.arg("name", name.into());
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the list of environment variables passed to commands.
     pub fn env_variables(&self) -> Vec<EnvVariable> {
@@ -413,7 +406,6 @@ impl Container {
         return vec![EnvVariable {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         }];
     }
@@ -428,7 +420,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -463,7 +454,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -472,7 +462,7 @@ impl Container {
     pub async fn exit_code(&self) -> eyre::Result<isize> {
         let query = self.selection.select("exitCode");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Writes the container as an OCI tarball to the destination file path on the host for the specified platform variants.
     /// Return true on success.
@@ -488,7 +478,7 @@ impl Container {
 
         query = query.arg("path", path.into());
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 
     /// Writes the container as an OCI tarball to the destination file path on the host for the specified platform variants.
@@ -512,7 +502,7 @@ impl Container {
             query = query.arg("platformVariants", platform_variants);
         }
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the list of exposed ports.
     /// Currently experimental; set _EXPERIMENTAL_DAGGER_SERVICES_DNS=0 to disable.
@@ -522,7 +512,6 @@ impl Container {
         return vec![Port {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         }];
     }
@@ -540,7 +529,6 @@ impl Container {
         return File {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -559,7 +547,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -570,7 +557,6 @@ impl Container {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -579,19 +565,19 @@ impl Container {
     pub async fn hostname(&self) -> eyre::Result<String> {
         let query = self.selection.select("hostname");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// A unique identifier for this container.
     pub async fn id(&self) -> eyre::Result<ContainerId> {
         let query = self.selection.select("id");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The unique image reference which can only be retrieved immediately after the 'Container.From' call.
     pub async fn image_ref(&self) -> eyre::Result<String> {
         let query = self.selection.select("imageRef");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the value of the specified label.
     pub async fn label(&self, name: impl Into<String>) -> eyre::Result<String> {
@@ -599,7 +585,7 @@ impl Container {
 
         query = query.arg("name", name.into());
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the list of labels passed to container.
     pub fn labels(&self) -> Vec<Label> {
@@ -608,7 +594,6 @@ impl Container {
         return vec![Label {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         }];
     }
@@ -616,7 +601,7 @@ impl Container {
     pub async fn mounts(&self) -> eyre::Result<Vec<String>> {
         let query = self.selection.select("mounts");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Creates a named sub-pipeline
     ///
@@ -632,7 +617,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -661,7 +645,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -669,7 +652,7 @@ impl Container {
     pub async fn platform(&self) -> eyre::Result<Platform> {
         let query = self.selection.select("platform");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Publishes this container as a new image to the specified address.
     /// Publish returns a fully qualified ref.
@@ -686,7 +669,7 @@ impl Container {
 
         query = query.arg("address", address.into());
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 
     /// Publishes this container as a new image to the specified address.
@@ -711,7 +694,7 @@ impl Container {
             query = query.arg("platformVariants", platform_variants);
         }
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves this container's root filesystem. Mounts are not included.
     pub fn rootfs(&self) -> Directory {
@@ -720,7 +703,6 @@ impl Container {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -729,20 +711,20 @@ impl Container {
     pub async fn stderr(&self) -> eyre::Result<String> {
         let query = self.selection.select("stderr");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The output stream of the last executed command.
     /// Errors if no command has been executed.
     pub async fn stdout(&self) -> eyre::Result<String> {
         let query = self.selection.select("stdout");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the user to be set for all commands.
     pub async fn user(&self) -> eyre::Result<String> {
         let query = self.selection.select("user");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Configures default arguments for future commands.
     ///
@@ -755,7 +737,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -775,7 +756,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -795,7 +775,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -827,7 +806,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -847,7 +825,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -870,7 +847,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -891,7 +867,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -935,7 +910,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -957,7 +931,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -990,7 +963,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1003,7 +975,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1023,7 +994,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1052,7 +1022,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1071,7 +1040,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1091,7 +1059,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1123,7 +1090,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1146,7 +1112,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1165,7 +1130,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1184,7 +1148,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1201,7 +1164,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1219,7 +1181,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1248,7 +1209,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1275,7 +1235,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1288,7 +1247,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1307,7 +1265,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1333,7 +1290,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1352,7 +1308,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1369,7 +1324,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1386,7 +1340,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1403,7 +1356,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1422,7 +1374,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1449,7 +1400,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1466,7 +1416,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1483,7 +1432,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1501,7 +1449,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1518,7 +1465,6 @@ impl Container {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1526,14 +1472,13 @@ impl Container {
     pub async fn workdir(&self) -> eyre::Result<String> {
         let query = self.selection.select("workdir");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct Directory {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -1613,7 +1558,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1630,7 +1574,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1645,7 +1588,6 @@ impl Directory {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1674,7 +1616,6 @@ impl Directory {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1686,7 +1627,7 @@ impl Directory {
     pub async fn entries(&self) -> eyre::Result<Vec<String>> {
         let query = self.selection.select("entries");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 
     /// Returns a list of files and directories at the given path.
@@ -1704,7 +1645,7 @@ impl Directory {
             query = query.arg("path", path);
         }
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Writes the contents of the directory to a path on the host.
     ///
@@ -1716,7 +1657,7 @@ impl Directory {
 
         query = query.arg("path", path.into());
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves a file at the given path.
     ///
@@ -1731,7 +1672,6 @@ impl Directory {
         return File {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1739,7 +1679,7 @@ impl Directory {
     pub async fn id(&self) -> eyre::Result<DirectoryId> {
         let query = self.selection.select("id");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// load a project's metadata
     pub fn load_project(&self, config_path: impl Into<String>) -> Project {
@@ -1750,7 +1690,6 @@ impl Directory {
         return Project {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1768,7 +1707,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1797,7 +1735,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1817,7 +1754,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1849,7 +1785,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1869,7 +1804,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1898,7 +1832,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1916,7 +1849,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1942,7 +1874,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1962,7 +1893,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -1991,7 +1921,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2010,7 +1939,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2027,7 +1955,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2044,7 +1971,6 @@ impl Directory {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2053,7 +1979,6 @@ impl Directory {
 pub struct EnvVariable {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2062,20 +1987,19 @@ impl EnvVariable {
     pub async fn name(&self) -> eyre::Result<String> {
         let query = self.selection.select("name");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The environment variable value.
     pub async fn value(&self) -> eyre::Result<String> {
         let query = self.selection.select("value");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct File {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2084,7 +2008,7 @@ impl File {
     pub async fn contents(&self) -> eyre::Result<String> {
         let query = self.selection.select("contents");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Writes the file to a file path on the host.
     ///
@@ -2096,13 +2020,13 @@ impl File {
 
         query = query.arg("path", path.into());
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the content-addressed identifier of the file.
     pub async fn id(&self) -> eyre::Result<FileId> {
         let query = self.selection.select("id");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves a secret referencing the contents of this file.
     pub fn secret(&self) -> Secret {
@@ -2111,7 +2035,6 @@ impl File {
         return Secret {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2119,7 +2042,7 @@ impl File {
     pub async fn size(&self) -> eyre::Result<isize> {
         let query = self.selection.select("size");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves this file with its created/modified timestamps set to the given time.
     ///
@@ -2136,7 +2059,6 @@ impl File {
         return File {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2145,7 +2067,6 @@ impl File {
 pub struct GitRef {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2162,7 +2083,7 @@ impl GitRef {
     pub async fn digest(&self) -> eyre::Result<String> {
         let query = self.selection.select("digest");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The filesystem tree at this ref.
     ///
@@ -2175,7 +2096,6 @@ impl GitRef {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2198,7 +2118,6 @@ impl GitRef {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2207,7 +2126,6 @@ impl GitRef {
 pub struct GitRepository {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2225,7 +2143,6 @@ impl GitRepository {
         return GitRef {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2233,7 +2150,7 @@ impl GitRepository {
     pub async fn branches(&self) -> eyre::Result<Vec<String>> {
         let query = self.selection.select("branches");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Returns details on one commit.
     ///
@@ -2248,7 +2165,6 @@ impl GitRepository {
         return GitRef {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2265,7 +2181,6 @@ impl GitRepository {
         return GitRef {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2273,14 +2188,13 @@ impl GitRepository {
     pub async fn tags(&self) -> eyre::Result<Vec<String>> {
         let query = self.selection.select("tags");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct Host {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2318,7 +2232,6 @@ impl Host {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2347,7 +2260,6 @@ impl Host {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2364,7 +2276,6 @@ impl Host {
         return HostVariable {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2381,7 +2292,6 @@ impl Host {
         return Socket {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2396,7 +2306,6 @@ impl Host {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2419,7 +2328,6 @@ impl Host {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2428,7 +2336,6 @@ impl Host {
 pub struct HostVariable {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2440,7 +2347,6 @@ impl HostVariable {
         return Secret {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2448,14 +2354,13 @@ impl HostVariable {
     pub async fn value(&self) -> eyre::Result<String> {
         let query = self.selection.select("value");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct Label {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2464,20 +2369,19 @@ impl Label {
     pub async fn name(&self) -> eyre::Result<String> {
         let query = self.selection.select("name");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The label value.
     pub async fn value(&self) -> eyre::Result<String> {
         let query = self.selection.select("value");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct Port {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2486,26 +2390,25 @@ impl Port {
     pub async fn description(&self) -> eyre::Result<String> {
         let query = self.selection.select("description");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The port number.
     pub async fn port(&self) -> eyre::Result<isize> {
         let query = self.selection.select("port");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The transport layer network protocol.
     pub async fn protocol(&self) -> eyre::Result<NetworkProtocol> {
         let query = self.selection.select("protocol");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct Project {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2517,7 +2420,6 @@ impl Project {
         return vec![Project {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         }];
     }
@@ -2528,7 +2430,6 @@ impl Project {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2536,25 +2437,25 @@ impl Project {
     pub async fn install(&self) -> eyre::Result<bool> {
         let query = self.selection.select("install");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// name of the project
     pub async fn name(&self) -> eyre::Result<String> {
         let query = self.selection.select("name");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// schema provided by the project
     pub async fn schema(&self) -> eyre::Result<String> {
         let query = self.selection.select("schema");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// sdk used to generate code for and/or execute this project
     pub async fn sdk(&self) -> eyre::Result<String> {
         let query = self.selection.select("sdk");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
@@ -2620,7 +2521,6 @@ impl Query {
         return CacheVolume {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2638,7 +2538,6 @@ impl Query {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2664,7 +2563,6 @@ impl Query {
         return Container {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2672,7 +2570,7 @@ impl Query {
     pub async fn default_platform(&self) -> eyre::Result<Platform> {
         let query = self.selection.select("defaultPlatform");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// Load a directory by ID. No argument produces an empty directory.
     ///
@@ -2685,7 +2583,6 @@ impl Query {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2705,7 +2602,6 @@ impl Query {
         return Directory {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2718,7 +2614,6 @@ impl Query {
         return File {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2738,7 +2633,6 @@ impl Query {
         return GitRepository {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2765,7 +2659,6 @@ impl Query {
         return GitRepository {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2776,7 +2669,6 @@ impl Query {
         return Host {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2794,7 +2686,6 @@ impl Query {
         return File {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2816,7 +2707,6 @@ impl Query {
         return File {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2834,7 +2724,6 @@ impl Query {
         return Query {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2859,7 +2748,6 @@ impl Query {
         return Query {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2872,7 +2760,6 @@ impl Query {
         return Project {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2885,7 +2772,6 @@ impl Query {
         return Secret {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2900,7 +2786,6 @@ impl Query {
         return Socket {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2920,7 +2805,6 @@ impl Query {
         return Socket {
             proc: self.proc.clone(),
             selection: query,
-            conn: self.conn.clone(),
             graphql_client: self.graphql_client.clone(),
         };
     }
@@ -2929,7 +2813,6 @@ impl Query {
 pub struct Secret {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2938,20 +2821,19 @@ impl Secret {
     pub async fn id(&self) -> eyre::Result<SecretId> {
         let query = self.selection.select("id");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
     /// The value of this secret.
     pub async fn plaintext(&self) -> eyre::Result<String> {
         let query = self.selection.select("plaintext");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Clone)]
 pub struct Socket {
     pub proc: Arc<Child>,
     pub selection: Selection,
-    pub conn: ConnectParams,
     pub graphql_client: DynGraphQLClient,
 }
 
@@ -2960,7 +2842,7 @@ impl Socket {
     pub async fn id(&self) -> eyre::Result<SocketId> {
         let query = self.selection.select("id");
 
-        query.execute(&graphql_client(&self.conn)).await
+        query.execute(self.graphql_client.clone()).await
     }
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

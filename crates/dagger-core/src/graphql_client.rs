@@ -1,19 +1,16 @@
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use base64::engine::general_purpose;
 use base64::Engine;
 use gql_client::ClientConfig;
-use serde::Deserialize;
 
 use crate::connect_params::ConnectParams;
 
+#[async_trait]
 pub trait GraphQLClient {
-    fn query<K>(&self, query: String) -> Pin<Box<dyn Future<Output = eyre::Result<Option<K>>>>>
-    where
-        K: for<'de> Deserialize<'de>;
+    async fn query(&self, query: &str) -> eyre::Result<Option<serde_json::Value>>;
 }
 
 pub type DynGraphQLClient = Arc<dyn GraphQLClient + Send + Sync>;
@@ -41,14 +38,15 @@ impl DefaultGraphQLClient {
     }
 }
 
+#[async_trait]
 impl GraphQLClient for DefaultGraphQLClient {
-    fn query<K>(&self, query: String) -> Pin<Box<dyn Future<Output = eyre::Result<Option<K>>>>>
-    where
-        Self: Sized,
-        K: for<'de> Deserialize<'de>,
-    {
-        let res = self.client.query::<K>(&query);
+    async fn query(&self, query: &str) -> eyre::Result<Option<serde_json::Value>> {
+        let res: Option<serde_json::Value> = self
+            .client
+            .query(&query)
+            .await
+            .map_err(|r| eyre::anyhow!(r.to_string()))?;
 
-        return Box::pin(res);
+        return Ok(res);
     }
 }
