@@ -79,8 +79,10 @@ jobs:
       #  if: matrix.os == 'ubuntu-22.04'
       #  run: |
       #    ci/ubuntu-install-packages
-      - uses: docker-practice/actions-setup-docker@master
-        timeout-minutes: 12
+      - name: Install packages (macOS)
+        if: matrix.os == 'macos-12'
+        run: |
+          ci/scripts/macos-install-packages
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
