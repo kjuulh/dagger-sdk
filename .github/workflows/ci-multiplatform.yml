@@ -73,6 +73,10 @@ jobs:
             #  os: windows-2022
             #  rust: nightly-x86_64-gnu
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.0.0
       - name: Checkout repository
         uses: actions/checkout@v3
       #- name: Install packages (Ubuntu)
