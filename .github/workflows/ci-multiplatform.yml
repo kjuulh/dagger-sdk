@@ -80,7 +80,7 @@ jobs:
       #  run: |
       #    ci/ubuntu-install-packages
       - uses: docker-practice/actions-setup-docker@master
-        timeout-minutes: 5
+        timeout-minutes: 12
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
