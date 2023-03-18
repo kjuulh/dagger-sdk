@@ -75,35 +75,42 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.0.0
       #- name: Install packages (Ubuntu)
       #  if: matrix.os == 'ubuntu-22.04'
       #  run: |
       #    ci/ubuntu-install-packages
-      #- name: Install packages (macOS)
-      #  if: matrix.os == 'macos-12'
-      #  run: |
-      #    ci/macos-install-packages
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+      - name: Install packages (macOS)
+        if: matrix.os == 'macos-12'
+        run: |
+          ci/scripts/macos-install-packages
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.0.0
+      - uses: actions-rs/toolchain@v1
+        if: matrix.target == ""
         with:
           toolchain: ${{ matrix.rust }}
-      - name: Use Cross
-        if: matrix.target != ''
-        run: |
-          cargo install cross
-          echo "CARGO=cross" >> $GITHUB_ENV
-          echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
-          echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
-      - name: Show command used for Cargo
-        run: |
-          echo "cargo command is: ${{ env.CARGO }}"
-          echo "target flag is: ${{ env.TARGET_FLAGS }}"
-      - name: Build all crates
-        run: ${{ env.CARGO }} build --verbose --workspace ${{ env.TARGET_FLAGS }}
-      - name: Run tests
-        if: matrix.target == ''
-        run: ${{ env.CARGO }} test --verbose --workspace ${{ env.TARGET_FLAGS }}
+      - uses: actions-rs/toolchain@v1
+        if: matrix.target != ""
+        with:
+          toolchain: ${{ matrix.rust }}
+          use-cross: true
+      - uses: actions-rs/cargo@v1
+        if: matrix.target != ""
+        with:
+          use-cross: true
+          command: build --workspace --verbose
+      - uses: actions-rs/cargo@v1
+        if: matrix.target == ""
+        with:
+          command: build --workspace --verbose
+      - uses: actions-rs/cargo@v1
+        if: matrix.target != ""
+        with:
+          use-cross: true
+          command: test --all --verbose
+      - uses: actions-rs/cargo@v1
+        if: matrix.target == ""
+        with:
+          command: test --all --verbose
