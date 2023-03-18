@@ -91,26 +91,34 @@ jobs:
         if: matrix.target == ''
         with:
           toolchain: ${{ matrix.rust }}
+
       - uses: actions-rs/toolchain@v1
         if: matrix.target != ''
         with:
           toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
           use-cross: true
+
       - uses: actions-rs/cargo@v1
         if: matrix.target != ''
         with:
           use-cross: true
-          command: build --workspace --verbose
+          command: build
+          args: --workspace --verbose --target ${{ matrix.target }}
       - uses: actions-rs/cargo@v1
         if: matrix.target == ''
         with:
-          command: build --workspace --verbose
+          command: build
+          args: --workspace --verbose
+
       - uses: actions-rs/cargo@v1
         if: matrix.target != ''
         with:
           use-cross: true
-          command: test --all --verbose
+          command: test
+          args: --all --verbose --target ${{ matrix.target }}
       - uses: actions-rs/cargo@v1
         if: matrix.target == ''
         with:
-          command: test --all --verbose
+          command: test
+          args: --all --verbose
