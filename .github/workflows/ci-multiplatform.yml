@@ -88,29 +88,29 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
       - uses: actions-rs/toolchain@v1
-        if: matrix.target == ""
+        if: matrix.target == ''
         with:
           toolchain: ${{ matrix.rust }}
       - uses: actions-rs/toolchain@v1
-        if: matrix.target != ""
+        if: matrix.target != ''
         with:
           toolchain: ${{ matrix.rust }}
           use-cross: true
       - uses: actions-rs/cargo@v1
-        if: matrix.target != ""
+        if: matrix.target != ''
         with:
           use-cross: true
           command: build --workspace --verbose
       - uses: actions-rs/cargo@v1
-        if: matrix.target == ""
+        if: matrix.target == ''
         with:
           command: build --workspace --verbose
       - uses: actions-rs/cargo@v1
-        if: matrix.target != ""
+        if: matrix.target != ''
         with:
           use-cross: true
           command: test --all --verbose
       - uses: actions-rs/cargo@v1
-        if: matrix.target == ""
+        if: matrix.target == ''
         with:
           command: test --all --verbose
