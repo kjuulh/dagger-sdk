@@ -100,12 +100,6 @@ jobs:
           echo "target flag is: ${{ env.TARGET_FLAGS }}"
       - name: Build all crates
         run: ${{ env.CARGO }} build --verbose --workspace ${{ env.TARGET_FLAGS }}
-      # This is useful for debugging problems when the expected build artifacts
-      # (like shell completions and man pages) aren't generated.
       - name: Run tests
-        # These tests should actually work, but they almost double the runtime.
-        # Every integration test spins up qemu to run 'rg', and when PCRE2 is
-        # enabled, every integration test is run twice: one with the default
-        # regex engine and once with PCRE2.
-        if: matrix.target != ''
+        if: matrix.target == ''
         run: ${{ env.CARGO }} test --verbose --workspace ${{ env.TARGET_FLAGS }}
