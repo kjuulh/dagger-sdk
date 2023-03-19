@@ -87,35 +87,39 @@ jobs:
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
-      - uses: actions-rs/toolchain@v1
-        if: matrix.target == ''
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-      - uses: actions-rs/toolchain@v1
+      - name: Use Cross
         if: matrix.target != ''
-        with:
-          toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          use-cross: true
-      - uses: actions-rs/cargo@v1
-        if: matrix.target != ''
-        with:
-          use-cross: true
-          command: build
-          args: --workspace --verbose --target ${{ matrix.target }}
-      - uses: actions-rs/cargo@v1
+        run: |
+          cargo install cross
+          echo "CARGO=cross" >> $GITHUB_ENV
+          echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
+          echo "TARGET_DIR=./target/${{ matrix.target }}" >> $GITHUB_ENV
+      - name: Show command used for Cargo
+        run: |
+          echo "cargo command is: ${{ env.CARGO }}"
+          echo "target flag is: ${{ env.TARGET_FLAGS }}"
+      - name: Build ripgrep and all crates
+        run: ${{ env.CARGO }} build --verbose --workspace ${{ env.TARGET_FLAGS }}
+      - name: Run tests (without cross)
         if: matrix.target == ''
-        with:
-          command: build
-          args: --workspace --verbose
-      - uses: actions-rs/cargo@v1
+        run: ${{ env.CARGO }} test --verbose --workspace ${{ env.TARGET_FLAGS }}
+      - name: Run tests (with cross)
         if: matrix.target != ''
+        run: ${{ env.CARGO }} test --verbose --workspace ${{ env.TARGET_FLAGS }}
+  rustfmt:
+    name: rustfmt
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
         with:
-          use-cross: true
-          command: test
-          args: --all --verbose --target ${{ matrix.target }}
-      - uses: actions-rs/cargo@v1
-        if: matrix.target == ''
-        with:
-          command: test
-          args: --all --verbose
+          toolchain: stable
+          components: rustfmt
+      - name: Check formatting
+        run: cargo fmt --all --check
