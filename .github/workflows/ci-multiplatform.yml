@@ -27,7 +27,7 @@ jobs:
           - stable
           - beta
           - nightly
-          #- nightly-musl
+          - nightly-musl
           #- nightly-32
           #- nightly-mips
           #- nightly-arm
@@ -47,10 +47,10 @@ jobs:
           - build: nightly
             os: ubuntu-22.04
             rust: nightly
-            #- build: nightly-musl
-            #  os: ubuntu-22.04
-            #  rust: nightly
-            #  target: x86_64-unknown-linux-musl
+          - build: nightly-musl
+            os: ubuntu-22.04
+            rust: nightly
+            target: x86_64-unknown-linux-musl
             #- build: nightly-32
             #  os: ubuntu-22.04
             #  rust: nightly
