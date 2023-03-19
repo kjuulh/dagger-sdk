@@ -120,10 +120,16 @@ jobs:
           - windows-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/setup-rust
-      - uses: ./.github/actions/cargo-llvm-cov
-        with:
-          name: test-${{matrix.os}}
+      - name: Install packages (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          ci/scripts/macos-install-packages
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.0.0
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
       - name: Run unit tests
         run: cargo test --locked --all-targets --workspace --all-features
         timeout-minutes: 10
