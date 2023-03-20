@@ -1,5 +1,6 @@
 mod container;
 mod directory;
+mod file;
 mod git;
 
 use dagger_sdk::connect;
