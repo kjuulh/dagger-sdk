@@ -122,6 +122,7 @@ pub struct CacheVolume {
 }
 
 impl CacheVolume {
+    #[tracing::instrument(skip_all)]
     pub async fn id(&self) -> Result<CacheId, DaggerError> {
         let query = self.selection.select("id");
 
@@ -356,6 +357,7 @@ impl Container {
     ///
     /// * `context` - Directory context used by the Dockerfile.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn build(&self, context: DirectoryId) -> Container {
         let mut query = self.selection.select("build");
 
@@ -374,6 +376,7 @@ impl Container {
     ///
     /// * `context` - Directory context used by the Dockerfile.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn build_opts<'a>(&self, context: DirectoryId, opts: ContainerBuildOpts<'a>) -> Container {
         let mut query = self.selection.select("build");
 
@@ -398,6 +401,7 @@ impl Container {
         };
     }
     /// Retrieves default arguments for future commands.
+    #[tracing::instrument(skip_all)]
     pub async fn default_args(&self) -> Result<Vec<String>, DaggerError> {
         let query = self.selection.select("defaultArgs");
 
@@ -409,6 +413,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `path` - The path of the directory to retrieve (e.g., "./src").
+    #[tracing::instrument(skip_all)]
     pub fn directory(&self, path: impl Into<String>) -> Directory {
         let mut query = self.selection.select("directory");
 
@@ -428,6 +433,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn endpoint(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("endpoint");
 
@@ -442,6 +448,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn endpoint_opts<'a>(
         &self,
         opts: ContainerEndpointOpts<'a>,
@@ -458,6 +465,7 @@ impl Container {
         query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves entrypoint to be prepended to the arguments of all commands.
+    #[tracing::instrument(skip_all)]
     pub async fn entrypoint(&self) -> Result<Vec<String>, DaggerError> {
         let query = self.selection.select("entrypoint");
 
@@ -468,6 +476,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `name` - The name of the environment variable to retrieve (e.g., "PATH").
+    #[tracing::instrument(skip_all)]
     pub async fn env_variable(&self, name: impl Into<String>) -> Result<String, DaggerError> {
         let mut query = self.selection.select("envVariable");
 
@@ -476,6 +485,7 @@ impl Container {
         query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the list of environment variables passed to commands.
+    #[tracing::instrument(skip_all)]
     pub fn env_variables(&self) -> Vec<EnvVariable> {
         let query = self.selection.select("envVariables");
 
@@ -490,6 +500,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn exec(&self) -> Container {
         let query = self.selection.select("exec");
 
@@ -505,6 +516,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn exec_opts<'a>(&self, opts: ContainerExecOpts<'a>) -> Container {
         let mut query = self.selection.select("exec");
 
@@ -535,6 +547,7 @@ impl Container {
     }
     /// Exit code of the last executed command. Zero means success.
     /// Will execute default command if none is set, or error if there's no default.
+    #[tracing::instrument(skip_all)]
     pub async fn exit_code(&self) -> Result<isize, DaggerError> {
         let query = self.selection.select("exitCode");
 
@@ -549,6 +562,7 @@ impl Container {
     /// * `path` - Host's destination path (e.g., "./tarball").
     /// Path can be relative to the engine's workdir or absolute.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn export(&self, path: impl Into<String>) -> Result<bool, DaggerError> {
         let mut query = self.selection.select("export");
 
@@ -566,6 +580,7 @@ impl Container {
     /// * `path` - Host's destination path (e.g., "./tarball").
     /// Path can be relative to the engine's workdir or absolute.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn export_opts(
         &self,
         path: impl Into<String>,
@@ -582,6 +597,7 @@ impl Container {
     }
     /// Retrieves the list of exposed ports.
     /// Currently experimental; set _EXPERIMENTAL_DAGGER_SERVICES_DNS=0 to disable.
+    #[tracing::instrument(skip_all)]
     pub fn exposed_ports(&self) -> Vec<Port> {
         let query = self.selection.select("exposedPorts");
 
@@ -597,6 +613,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `path` - The path of the file to retrieve (e.g., "./README.md").
+    #[tracing::instrument(skip_all)]
     pub fn file(&self, path: impl Into<String>) -> File {
         let mut query = self.selection.select("file");
 
@@ -615,6 +632,7 @@ impl Container {
     /// * `address` - Image's address from its registry.
     ///
     /// Formatted as [host]/[user]/[repo]:[tag] (e.g., "docker.io/dagger/dagger:main").
+    #[tracing::instrument(skip_all)]
     pub fn from(&self, address: impl Into<String>) -> Container {
         let mut query = self.selection.select("from");
 
@@ -627,6 +645,7 @@ impl Container {
         };
     }
     /// Retrieves this container's root filesystem. Mounts are not included.
+    #[tracing::instrument(skip_all)]
     pub fn fs(&self) -> Directory {
         let query = self.selection.select("fs");
 
@@ -638,18 +657,21 @@ impl Container {
     }
     /// Retrieves a hostname which can be used by clients to reach this container.
     /// Currently experimental; set _EXPERIMENTAL_DAGGER_SERVICES_DNS=0 to disable.
+    #[tracing::instrument(skip_all)]
     pub async fn hostname(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("hostname");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// A unique identifier for this container.
+    #[tracing::instrument(skip_all)]
     pub async fn id(&self) -> Result<ContainerId, DaggerError> {
         let query = self.selection.select("id");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// The unique image reference which can only be retrieved immediately after the 'Container.From' call.
+    #[tracing::instrument(skip_all)]
     pub async fn image_ref(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("imageRef");
 
@@ -663,6 +685,7 @@ impl Container {
     ///
     /// * `source` - File to read the container from.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn import(&self, source: FileId) -> Container {
         let mut query = self.selection.select("import");
 
@@ -683,6 +706,7 @@ impl Container {
     ///
     /// * `source` - File to read the container from.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn import_opts<'a>(&self, source: FileId, opts: ContainerImportOpts<'a>) -> Container {
         let mut query = self.selection.select("import");
 
@@ -698,6 +722,7 @@ impl Container {
         };
     }
     /// Retrieves the value of the specified label.
+    #[tracing::instrument(skip_all)]
     pub async fn label(&self, name: impl Into<String>) -> Result<String, DaggerError> {
         let mut query = self.selection.select("label");
 
@@ -706,6 +731,7 @@ impl Container {
         query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the list of labels passed to container.
+    #[tracing::instrument(skip_all)]
     pub fn labels(&self) -> Vec<Label> {
         let query = self.selection.select("labels");
 
@@ -716,6 +742,7 @@ impl Container {
         }];
     }
     /// Retrieves the list of paths where a directory is mounted.
+    #[tracing::instrument(skip_all)]
     pub async fn mounts(&self) -> Result<Vec<String>, DaggerError> {
         let query = self.selection.select("mounts");
 
@@ -727,6 +754,7 @@ impl Container {
     ///
     /// * `name` - Pipeline name.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn pipeline(&self, name: impl Into<String>) -> Container {
         let mut query = self.selection.select("pipeline");
 
@@ -745,6 +773,7 @@ impl Container {
     ///
     /// * `name` - Pipeline name.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn pipeline_opts<'a>(
         &self,
         name: impl Into<String>,
@@ -767,6 +796,7 @@ impl Container {
         };
     }
     /// The platform this container executes and publishes as.
+    #[tracing::instrument(skip_all)]
     pub async fn platform(&self) -> Result<Platform, DaggerError> {
         let query = self.selection.select("platform");
 
@@ -782,6 +812,7 @@ impl Container {
     ///
     /// Formatted as [host]/[user]/[repo]:[tag] (e.g. "docker.io/dagger/dagger:main").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn publish(&self, address: impl Into<String>) -> Result<String, DaggerError> {
         let mut query = self.selection.select("publish");
 
@@ -800,6 +831,7 @@ impl Container {
     ///
     /// Formatted as [host]/[user]/[repo]:[tag] (e.g. "docker.io/dagger/dagger:main").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn publish_opts(
         &self,
         address: impl Into<String>,
@@ -815,6 +847,7 @@ impl Container {
         query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves this container's root filesystem. Mounts are not included.
+    #[tracing::instrument(skip_all)]
     pub fn rootfs(&self) -> Directory {
         let query = self.selection.select("rootfs");
 
@@ -826,6 +859,7 @@ impl Container {
     }
     /// The error stream of the last executed command.
     /// Will execute default command if none is set, or error if there's no default.
+    #[tracing::instrument(skip_all)]
     pub async fn stderr(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("stderr");
 
@@ -833,12 +867,14 @@ impl Container {
     }
     /// The output stream of the last executed command.
     /// Will execute default command if none is set, or error if there's no default.
+    #[tracing::instrument(skip_all)]
     pub async fn stdout(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("stdout");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the user to be set for all commands.
+    #[tracing::instrument(skip_all)]
     pub async fn user(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("user");
 
@@ -849,6 +885,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_default_args(&self) -> Container {
         let query = self.selection.select("withDefaultArgs");
 
@@ -864,6 +901,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_default_args_opts<'a>(&self, opts: ContainerWithDefaultArgsOpts<'a>) -> Container {
         let mut query = self.selection.select("withDefaultArgs");
 
@@ -884,6 +922,7 @@ impl Container {
     /// * `path` - Location of the written directory (e.g., "/tmp/directory").
     /// * `directory` - Identifier of the directory to write
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_directory(&self, path: impl Into<String>, directory: DirectoryId) -> Container {
         let mut query = self.selection.select("withDirectory");
 
@@ -904,6 +943,7 @@ impl Container {
     /// * `path` - Location of the written directory (e.g., "/tmp/directory").
     /// * `directory` - Identifier of the directory to write
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_directory_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -935,6 +975,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `args` - Entrypoint to use for future executions (e.g., ["go", "run"]).
+    #[tracing::instrument(skip_all)]
     pub fn with_entrypoint(&self, args: Vec<impl Into<String>>) -> Container {
         let mut query = self.selection.select("withEntrypoint");
 
@@ -955,6 +996,7 @@ impl Container {
     ///
     /// * `name` - The name of the environment variable (e.g., "HOST").
     /// * `value` - The value of the environment variable. (e.g., "localhost").
+    #[tracing::instrument(skip_all)]
     pub fn with_env_variable(
         &self,
         name: impl Into<String>,
@@ -979,6 +1021,7 @@ impl Container {
     ///
     /// If empty, the container's default command is used.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_exec(&self, args: Vec<impl Into<String>>) -> Container {
         let mut query = self.selection.select("withExec");
 
@@ -1002,6 +1045,7 @@ impl Container {
     ///
     /// If empty, the container's default command is used.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_exec_opts<'a>(
         &self,
         args: Vec<impl Into<String>>,
@@ -1051,6 +1095,7 @@ impl Container {
     ///
     /// * `port` - Port number to expose
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_exposed_port(&self, port: isize) -> Container {
         let mut query = self.selection.select("withExposedPort");
 
@@ -1073,6 +1118,7 @@ impl Container {
     ///
     /// * `port` - Port number to expose
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_exposed_port_opts<'a>(
         &self,
         port: isize,
@@ -1095,6 +1141,7 @@ impl Container {
         };
     }
     /// Initializes this container from this DirectoryID.
+    #[tracing::instrument(skip_all)]
     pub fn with_fs(&self, id: DirectoryId) -> Container {
         let mut query = self.selection.select("withFS");
 
@@ -1113,6 +1160,7 @@ impl Container {
     /// * `path` - Location of the copied file (e.g., "/tmp/file.txt").
     /// * `source` - Identifier of the file to copy.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_file(&self, path: impl Into<String>, source: FileId) -> Container {
         let mut query = self.selection.select("withFile");
 
@@ -1133,6 +1181,7 @@ impl Container {
     /// * `path` - Location of the copied file (e.g., "/tmp/file.txt").
     /// * `source` - Identifier of the file to copy.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_file_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -1162,6 +1211,7 @@ impl Container {
     ///
     /// * `name` - The name of the label (e.g., "org.opencontainers.artifact.created").
     /// * `value` - The value of the label (e.g., "2023-01-01T00:00:00Z").
+    #[tracing::instrument(skip_all)]
     pub fn with_label(&self, name: impl Into<String>, value: impl Into<String>) -> Container {
         let mut query = self.selection.select("withLabel");
 
@@ -1181,6 +1231,7 @@ impl Container {
     /// * `path` - Location of the cache directory (e.g., "/cache/node_modules").
     /// * `cache` - Identifier of the cache volume to mount.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_cache(&self, path: impl Into<String>, cache: CacheId) -> Container {
         let mut query = self.selection.select("withMountedCache");
 
@@ -1201,6 +1252,7 @@ impl Container {
     /// * `path` - Location of the cache directory (e.g., "/cache/node_modules").
     /// * `cache` - Identifier of the cache volume to mount.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_cache_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -1234,6 +1286,7 @@ impl Container {
     /// * `path` - Location of the mounted directory (e.g., "/mnt/directory").
     /// * `source` - Identifier of the mounted directory.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_directory(
         &self,
         path: impl Into<String>,
@@ -1258,6 +1311,7 @@ impl Container {
     /// * `path` - Location of the mounted directory (e.g., "/mnt/directory").
     /// * `source` - Identifier of the mounted directory.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_directory_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -1285,6 +1339,7 @@ impl Container {
     /// * `path` - Location of the mounted file (e.g., "/tmp/file.txt").
     /// * `source` - Identifier of the mounted file.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_file(&self, path: impl Into<String>, source: FileId) -> Container {
         let mut query = self.selection.select("withMountedFile");
 
@@ -1305,6 +1360,7 @@ impl Container {
     /// * `path` - Location of the mounted file (e.g., "/tmp/file.txt").
     /// * `source` - Identifier of the mounted file.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_file_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -1332,6 +1388,7 @@ impl Container {
     /// * `path` - Location of the secret file (e.g., "/tmp/secret.txt").
     /// * `source` - Identifier of the secret to mount.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_secret(&self, path: impl Into<String>, source: SecretId) -> Container {
         let mut query = self.selection.select("withMountedSecret");
 
@@ -1352,6 +1409,7 @@ impl Container {
     /// * `path` - Location of the secret file (e.g., "/tmp/secret.txt").
     /// * `source` - Identifier of the secret to mount.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_secret_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -1377,6 +1435,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `path` - Location of the temporary directory (e.g., "/tmp/temp_dir").
+    #[tracing::instrument(skip_all)]
     pub fn with_mounted_temp(&self, path: impl Into<String>) -> Container {
         let mut query = self.selection.select("withMountedTemp");
 
@@ -1394,6 +1453,7 @@ impl Container {
     ///
     /// * `path` - Location of the written file (e.g., "/tmp/file.txt").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_new_file(&self, path: impl Into<String>) -> Container {
         let mut query = self.selection.select("withNewFile");
 
@@ -1412,6 +1472,7 @@ impl Container {
     ///
     /// * `path` - Location of the written file (e.g., "/tmp/file.txt").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_new_file_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -1444,6 +1505,7 @@ impl Container {
     /// Formatted as [host]/[user]/[repo]:[tag] (e.g. docker.io/dagger/dagger:main).
     /// * `username` - The username of the registry's account (e.g., "Dagger").
     /// * `secret` - The API key, password or token to authenticate to this registry.
+    #[tracing::instrument(skip_all)]
     pub fn with_registry_auth(
         &self,
         address: impl Into<String>,
@@ -1463,6 +1525,7 @@ impl Container {
         };
     }
     /// Initializes this container from this DirectoryID.
+    #[tracing::instrument(skip_all)]
     pub fn with_rootfs(&self, id: DirectoryId) -> Container {
         let mut query = self.selection.select("withRootfs");
 
@@ -1480,6 +1543,7 @@ impl Container {
     ///
     /// * `name` - The name of the secret variable (e.g., "API_SECRET").
     /// * `secret` - The identifier of the secret value.
+    #[tracing::instrument(skip_all)]
     pub fn with_secret_variable(&self, name: impl Into<String>, secret: SecretId) -> Container {
         let mut query = self.selection.select("withSecretVariable");
 
@@ -1503,6 +1567,7 @@ impl Container {
     ///
     /// * `alias` - A name that can be used to reach the service from the container
     /// * `service` - Identifier of the service container
+    #[tracing::instrument(skip_all)]
     pub fn with_service_binding(
         &self,
         alias: impl Into<String>,
@@ -1526,6 +1591,7 @@ impl Container {
     /// * `path` - Location of the forwarded Unix socket (e.g., "/tmp/socket").
     /// * `source` - Identifier of the socket to forward.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_unix_socket(&self, path: impl Into<String>, source: SocketId) -> Container {
         let mut query = self.selection.select("withUnixSocket");
 
@@ -1546,6 +1612,7 @@ impl Container {
     /// * `path` - Location of the forwarded Unix socket (e.g., "/tmp/socket").
     /// * `source` - Identifier of the socket to forward.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_unix_socket_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -1571,6 +1638,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `name` - The user to set (e.g., "root").
+    #[tracing::instrument(skip_all)]
     pub fn with_user(&self, name: impl Into<String>) -> Container {
         let mut query = self.selection.select("withUser");
 
@@ -1587,6 +1655,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `path` - The path to set as the working directory (e.g., "/app").
+    #[tracing::instrument(skip_all)]
     pub fn with_workdir(&self, path: impl Into<String>) -> Container {
         let mut query = self.selection.select("withWorkdir");
 
@@ -1603,6 +1672,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `name` - The name of the environment variable (e.g., "HOST").
+    #[tracing::instrument(skip_all)]
     pub fn without_env_variable(&self, name: impl Into<String>) -> Container {
         let mut query = self.selection.select("withoutEnvVariable");
 
@@ -1621,6 +1691,7 @@ impl Container {
     ///
     /// * `port` - Port number to unexpose
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn without_exposed_port(&self, port: isize) -> Container {
         let mut query = self.selection.select("withoutExposedPort");
 
@@ -1640,6 +1711,7 @@ impl Container {
     ///
     /// * `port` - Port number to unexpose
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn without_exposed_port_opts(
         &self,
         port: isize,
@@ -1663,6 +1735,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `name` - The name of the label to remove (e.g., "org.opencontainers.artifact.created").
+    #[tracing::instrument(skip_all)]
     pub fn without_label(&self, name: impl Into<String>) -> Container {
         let mut query = self.selection.select("withoutLabel");
 
@@ -1679,6 +1752,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `path` - Location of the cache directory (e.g., "/cache/node_modules").
+    #[tracing::instrument(skip_all)]
     pub fn without_mount(&self, path: impl Into<String>) -> Container {
         let mut query = self.selection.select("withoutMount");
 
@@ -1696,6 +1770,7 @@ impl Container {
     ///
     /// * `address` - Registry's address to remove the authentication from.
     /// Formatted as [host]/[user]/[repo]:[tag] (e.g. docker.io/dagger/dagger:main).
+    #[tracing::instrument(skip_all)]
     pub fn without_registry_auth(&self, address: impl Into<String>) -> Container {
         let mut query = self.selection.select("withoutRegistryAuth");
 
@@ -1712,6 +1787,7 @@ impl Container {
     /// # Arguments
     ///
     /// * `path` - Location of the socket to remove (e.g., "/tmp/socket").
+    #[tracing::instrument(skip_all)]
     pub fn without_unix_socket(&self, path: impl Into<String>) -> Container {
         let mut query = self.selection.select("withoutUnixSocket");
 
@@ -1724,6 +1800,7 @@ impl Container {
         };
     }
     /// Retrieves the working directory for all commands.
+    #[tracing::instrument(skip_all)]
     pub async fn workdir(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("workdir");
 
@@ -1809,6 +1886,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `other` - Identifier of the directory to compare.
+    #[tracing::instrument(skip_all)]
     pub fn diff(&self, other: DirectoryId) -> Directory {
         let mut query = self.selection.select("diff");
 
@@ -1825,6 +1903,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `path` - Location of the directory to retrieve (e.g., "/src").
+    #[tracing::instrument(skip_all)]
     pub fn directory(&self, path: impl Into<String>) -> Directory {
         let mut query = self.selection.select("directory");
 
@@ -1841,6 +1920,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn docker_build(&self) -> Container {
         let query = self.selection.select("dockerBuild");
 
@@ -1856,6 +1936,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn docker_build_opts<'a>(&self, opts: DirectoryDockerBuildOpts<'a>) -> Container {
         let mut query = self.selection.select("dockerBuild");
 
@@ -1886,6 +1967,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn entries(&self) -> Result<Vec<String>, DaggerError> {
         let query = self.selection.select("entries");
 
@@ -1897,6 +1979,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub async fn entries_opts<'a>(
         &self,
         opts: DirectoryEntriesOpts<'a>,
@@ -1914,6 +1997,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `path` - Location of the copied directory (e.g., "logs/").
+    #[tracing::instrument(skip_all)]
     pub async fn export(&self, path: impl Into<String>) -> Result<bool, DaggerError> {
         let mut query = self.selection.select("export");
 
@@ -1926,6 +2010,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `path` - Location of the file to retrieve (e.g., "README.md").
+    #[tracing::instrument(skip_all)]
     pub fn file(&self, path: impl Into<String>) -> File {
         let mut query = self.selection.select("file");
 
@@ -1938,12 +2023,14 @@ impl Directory {
         };
     }
     /// The content-addressed identifier of the directory.
+    #[tracing::instrument(skip_all)]
     pub async fn id(&self) -> Result<DirectoryId, DaggerError> {
         let query = self.selection.select("id");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// load a project's metadata
+    #[tracing::instrument(skip_all)]
     pub fn load_project(&self, config_path: impl Into<String>) -> Project {
         let mut query = self.selection.select("loadProject");
 
@@ -1961,6 +2048,7 @@ impl Directory {
     ///
     /// * `name` - Pipeline name.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn pipeline(&self, name: impl Into<String>) -> Directory {
         let mut query = self.selection.select("pipeline");
 
@@ -1979,6 +2067,7 @@ impl Directory {
     ///
     /// * `name` - Pipeline name.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn pipeline_opts<'a>(
         &self,
         name: impl Into<String>,
@@ -2007,6 +2096,7 @@ impl Directory {
     /// * `path` - Location of the written directory (e.g., "/src/").
     /// * `directory` - Identifier of the directory to copy.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_directory(&self, path: impl Into<String>, directory: DirectoryId) -> Directory {
         let mut query = self.selection.select("withDirectory");
 
@@ -2027,6 +2117,7 @@ impl Directory {
     /// * `path` - Location of the written directory (e.g., "/src/").
     /// * `directory` - Identifier of the directory to copy.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_directory_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -2057,6 +2148,7 @@ impl Directory {
     /// * `path` - Location of the copied file (e.g., "/file.txt").
     /// * `source` - Identifier of the file to copy.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_file(&self, path: impl Into<String>, source: FileId) -> Directory {
         let mut query = self.selection.select("withFile");
 
@@ -2077,6 +2169,7 @@ impl Directory {
     /// * `path` - Location of the copied file (e.g., "/file.txt").
     /// * `source` - Identifier of the file to copy.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_file_opts(
         &self,
         path: impl Into<String>,
@@ -2103,6 +2196,7 @@ impl Directory {
     ///
     /// * `path` - Location of the directory created (e.g., "/logs").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_new_directory(&self, path: impl Into<String>) -> Directory {
         let mut query = self.selection.select("withNewDirectory");
 
@@ -2121,6 +2215,7 @@ impl Directory {
     ///
     /// * `path` - Location of the directory created (e.g., "/logs").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_new_directory_opts(
         &self,
         path: impl Into<String>,
@@ -2146,6 +2241,7 @@ impl Directory {
     /// * `path` - Location of the written file (e.g., "/file.txt").
     /// * `contents` - Content of the written file (e.g., "Hello world!").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_new_file(&self, path: impl Into<String>, contents: impl Into<String>) -> Directory {
         let mut query = self.selection.select("withNewFile");
 
@@ -2166,6 +2262,7 @@ impl Directory {
     /// * `path` - Location of the written file (e.g., "/file.txt").
     /// * `contents` - Content of the written file (e.g., "Hello world!").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn with_new_file_opts(
         &self,
         path: impl Into<String>,
@@ -2193,6 +2290,7 @@ impl Directory {
     /// * `timestamp` - Timestamp to set dir/files in.
     ///
     /// Formatted in seconds following Unix epoch (e.g., 1672531199).
+    #[tracing::instrument(skip_all)]
     pub fn with_timestamps(&self, timestamp: isize) -> Directory {
         let mut query = self.selection.select("withTimestamps");
 
@@ -2209,6 +2307,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `path` - Location of the directory to remove (e.g., ".github/").
+    #[tracing::instrument(skip_all)]
     pub fn without_directory(&self, path: impl Into<String>) -> Directory {
         let mut query = self.selection.select("withoutDirectory");
 
@@ -2225,6 +2324,7 @@ impl Directory {
     /// # Arguments
     ///
     /// * `path` - Location of the file to remove (e.g., "/file.txt").
+    #[tracing::instrument(skip_all)]
     pub fn without_file(&self, path: impl Into<String>) -> Directory {
         let mut query = self.selection.select("withoutFile");
 
@@ -2246,12 +2346,14 @@ pub struct EnvVariable {
 
 impl EnvVariable {
     /// The environment variable name.
+    #[tracing::instrument(skip_all)]
     pub async fn name(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("name");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// The environment variable value.
+    #[tracing::instrument(skip_all)]
     pub async fn value(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("value");
 
@@ -2267,6 +2369,7 @@ pub struct File {
 
 impl File {
     /// Retrieves the contents of the file.
+    #[tracing::instrument(skip_all)]
     pub async fn contents(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("contents");
 
@@ -2277,6 +2380,7 @@ impl File {
     /// # Arguments
     ///
     /// * `path` - Location of the written directory (e.g., "output.txt").
+    #[tracing::instrument(skip_all)]
     pub async fn export(&self, path: impl Into<String>) -> Result<bool, DaggerError> {
         let mut query = self.selection.select("export");
 
@@ -2285,12 +2389,14 @@ impl File {
         query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves the content-addressed identifier of the file.
+    #[tracing::instrument(skip_all)]
     pub async fn id(&self) -> Result<FileId, DaggerError> {
         let query = self.selection.select("id");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// Retrieves a secret referencing the contents of this file.
+    #[tracing::instrument(skip_all)]
     pub fn secret(&self) -> Secret {
         let query = self.selection.select("secret");
 
@@ -2301,6 +2407,7 @@ impl File {
         };
     }
     /// Gets the size of the file, in bytes.
+    #[tracing::instrument(skip_all)]
     pub async fn size(&self) -> Result<isize, DaggerError> {
         let query = self.selection.select("size");
 
@@ -2313,6 +2420,7 @@ impl File {
     /// * `timestamp` - Timestamp to set dir/files in.
     ///
     /// Formatted in seconds following Unix epoch (e.g., 1672531199).
+    #[tracing::instrument(skip_all)]
     pub fn with_timestamps(&self, timestamp: isize) -> File {
         let mut query = self.selection.select("withTimestamps");
 
@@ -2342,6 +2450,7 @@ pub struct GitRefTreeOpts<'a> {
 
 impl GitRef {
     /// The digest of the current value of this ref.
+    #[tracing::instrument(skip_all)]
     pub async fn digest(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("digest");
 
@@ -2352,6 +2461,7 @@ impl GitRef {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn tree(&self) -> Directory {
         let query = self.selection.select("tree");
 
@@ -2367,6 +2477,7 @@ impl GitRef {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn tree_opts<'a>(&self, opts: GitRefTreeOpts<'a>) -> Directory {
         let mut query = self.selection.select("tree");
 
@@ -2397,6 +2508,7 @@ impl GitRepository {
     /// # Arguments
     ///
     /// * `name` - Branch's name (e.g., "main").
+    #[tracing::instrument(skip_all)]
     pub fn branch(&self, name: impl Into<String>) -> GitRef {
         let mut query = self.selection.select("branch");
 
@@ -2409,6 +2521,7 @@ impl GitRepository {
         };
     }
     /// Lists of branches on the repository.
+    #[tracing::instrument(skip_all)]
     pub async fn branches(&self) -> Result<Vec<String>, DaggerError> {
         let query = self.selection.select("branches");
 
@@ -2419,6 +2532,7 @@ impl GitRepository {
     /// # Arguments
     ///
     /// * `id` - Identifier of the commit (e.g., "b6315d8f2810962c601af73f86831f6866ea798b").
+    #[tracing::instrument(skip_all)]
     pub fn commit(&self, id: impl Into<String>) -> GitRef {
         let mut query = self.selection.select("commit");
 
@@ -2435,6 +2549,7 @@ impl GitRepository {
     /// # Arguments
     ///
     /// * `name` - Tag's name (e.g., "v0.3.9").
+    #[tracing::instrument(skip_all)]
     pub fn tag(&self, name: impl Into<String>) -> GitRef {
         let mut query = self.selection.select("tag");
 
@@ -2447,6 +2562,7 @@ impl GitRepository {
         };
     }
     /// Lists of tags on the repository.
+    #[tracing::instrument(skip_all)]
     pub async fn tags(&self) -> Result<Vec<String>, DaggerError> {
         let query = self.selection.select("tags");
 
@@ -2486,6 +2602,7 @@ impl Host {
     ///
     /// * `path` - Location of the directory to access (e.g., ".").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn directory(&self, path: impl Into<String>) -> Directory {
         let mut query = self.selection.select("directory");
 
@@ -2504,6 +2621,7 @@ impl Host {
     ///
     /// * `path` - Location of the directory to access (e.g., ".").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn directory_opts<'a>(
         &self,
         path: impl Into<String>,
@@ -2530,6 +2648,7 @@ impl Host {
     /// # Arguments
     ///
     /// * `name` - Name of the environment variable (e.g., "PATH").
+    #[tracing::instrument(skip_all)]
     pub fn env_variable(&self, name: impl Into<String>) -> HostVariable {
         let mut query = self.selection.select("envVariable");
 
@@ -2546,6 +2665,7 @@ impl Host {
     /// # Arguments
     ///
     /// * `path` - Location of the Unix socket (e.g., "/var/run/docker.sock").
+    #[tracing::instrument(skip_all)]
     pub fn unix_socket(&self, path: impl Into<String>) -> Socket {
         let mut query = self.selection.select("unixSocket");
 
@@ -2562,6 +2682,7 @@ impl Host {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn workdir(&self) -> Directory {
         let query = self.selection.select("workdir");
 
@@ -2577,6 +2698,7 @@ impl Host {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn workdir_opts<'a>(&self, opts: HostWorkdirOpts<'a>) -> Directory {
         let mut query = self.selection.select("workdir");
 
@@ -2603,6 +2725,7 @@ pub struct HostVariable {
 
 impl HostVariable {
     /// A secret referencing the value of this variable.
+    #[tracing::instrument(skip_all)]
     pub fn secret(&self) -> Secret {
         let query = self.selection.select("secret");
 
@@ -2613,6 +2736,7 @@ impl HostVariable {
         };
     }
     /// The value of this variable.
+    #[tracing::instrument(skip_all)]
     pub async fn value(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("value");
 
@@ -2628,12 +2752,14 @@ pub struct Label {
 
 impl Label {
     /// The label name.
+    #[tracing::instrument(skip_all)]
     pub async fn name(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("name");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// The label value.
+    #[tracing::instrument(skip_all)]
     pub async fn value(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("value");
 
@@ -2649,18 +2775,21 @@ pub struct Port {
 
 impl Port {
     /// The port description.
+    #[tracing::instrument(skip_all)]
     pub async fn description(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("description");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// The port number.
+    #[tracing::instrument(skip_all)]
     pub async fn port(&self) -> Result<isize, DaggerError> {
         let query = self.selection.select("port");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// The transport layer network protocol.
+    #[tracing::instrument(skip_all)]
     pub async fn protocol(&self) -> Result<NetworkProtocol, DaggerError> {
         let query = self.selection.select("protocol");
 
@@ -2676,6 +2805,7 @@ pub struct Project {
 
 impl Project {
     /// extensions in this project
+    #[tracing::instrument(skip_all)]
     pub fn extensions(&self) -> Vec<Project> {
         let query = self.selection.select("extensions");
 
@@ -2686,6 +2816,7 @@ impl Project {
         }];
     }
     /// Code files generated by the SDKs in the project
+    #[tracing::instrument(skip_all)]
     pub fn generated_code(&self) -> Directory {
         let query = self.selection.select("generatedCode");
 
@@ -2696,24 +2827,28 @@ impl Project {
         };
     }
     /// install the project's schema
+    #[tracing::instrument(skip_all)]
     pub async fn install(&self) -> Result<bool, DaggerError> {
         let query = self.selection.select("install");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// name of the project
+    #[tracing::instrument(skip_all)]
     pub async fn name(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("name");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// schema provided by the project
+    #[tracing::instrument(skip_all)]
     pub async fn schema(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("schema");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// sdk used to generate code for and/or execute this project
+    #[tracing::instrument(skip_all)]
     pub async fn sdk(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("sdk");
 
@@ -2775,6 +2910,7 @@ impl Query {
     /// # Arguments
     ///
     /// * `key` - A string identifier to target this cache volume (e.g., "modules-cache").
+    #[tracing::instrument(skip_all)]
     pub fn cache_volume(&self, key: impl Into<String>) -> CacheVolume {
         let mut query = self.selection.select("cacheVolume");
 
@@ -2794,6 +2930,7 @@ impl Query {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn container(&self) -> Container {
         let query = self.selection.select("container");
 
@@ -2812,6 +2949,7 @@ impl Query {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn container_opts(&self, opts: QueryContainerOpts) -> Container {
         let mut query = self.selection.select("container");
 
@@ -2829,6 +2967,7 @@ impl Query {
         };
     }
     /// The default platform of the builder.
+    #[tracing::instrument(skip_all)]
     pub async fn default_platform(&self) -> Result<Platform, DaggerError> {
         let query = self.selection.select("defaultPlatform");
 
@@ -2839,6 +2978,7 @@ impl Query {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn directory(&self) -> Directory {
         let query = self.selection.select("directory");
 
@@ -2854,6 +2994,7 @@ impl Query {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn directory_opts(&self, opts: QueryDirectoryOpts) -> Directory {
         let mut query = self.selection.select("directory");
 
@@ -2868,6 +3009,7 @@ impl Query {
         };
     }
     /// Loads a file by ID.
+    #[tracing::instrument(skip_all)]
     pub fn file(&self, id: FileId) -> File {
         let mut query = self.selection.select("file");
 
@@ -2887,6 +3029,7 @@ impl Query {
     /// Can be formatted as https://{host}/{owner}/{repo}, git@{host}/{owner}/{repo}
     /// Suffix ".git" is optional.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn git(&self, url: impl Into<String>) -> GitRepository {
         let mut query = self.selection.select("git");
 
@@ -2907,6 +3050,7 @@ impl Query {
     /// Can be formatted as https://{host}/{owner}/{repo}, git@{host}/{owner}/{repo}
     /// Suffix ".git" is optional.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn git_opts(&self, url: impl Into<String>, opts: QueryGitOpts) -> GitRepository {
         let mut query = self.selection.select("git");
 
@@ -2925,6 +3069,7 @@ impl Query {
         };
     }
     /// Queries the host environment.
+    #[tracing::instrument(skip_all)]
     pub fn host(&self) -> Host {
         let query = self.selection.select("host");
 
@@ -2940,6 +3085,7 @@ impl Query {
     ///
     /// * `url` - HTTP url to get the content from (e.g., "https://docs.dagger.io").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn http(&self, url: impl Into<String>) -> File {
         let mut query = self.selection.select("http");
 
@@ -2958,6 +3104,7 @@ impl Query {
     ///
     /// * `url` - HTTP url to get the content from (e.g., "https://docs.dagger.io").
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn http_opts(&self, url: impl Into<String>, opts: QueryHttpOpts) -> File {
         let mut query = self.selection.select("http");
 
@@ -2978,6 +3125,7 @@ impl Query {
     ///
     /// * `name` - Pipeline name.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn pipeline(&self, name: impl Into<String>) -> Query {
         let mut query = self.selection.select("pipeline");
 
@@ -2996,6 +3144,7 @@ impl Query {
     ///
     /// * `name` - Pipeline name.
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn pipeline_opts<'a>(&self, name: impl Into<String>, opts: QueryPipelineOpts<'a>) -> Query {
         let mut query = self.selection.select("pipeline");
 
@@ -3014,6 +3163,7 @@ impl Query {
         };
     }
     /// Look up a project by name
+    #[tracing::instrument(skip_all)]
     pub fn project(&self, name: impl Into<String>) -> Project {
         let mut query = self.selection.select("project");
 
@@ -3026,6 +3176,7 @@ impl Query {
         };
     }
     /// Loads a secret from its ID.
+    #[tracing::instrument(skip_all)]
     pub fn secret(&self, id: SecretId) -> Secret {
         let mut query = self.selection.select("secret");
 
@@ -3043,6 +3194,7 @@ impl Query {
     ///
     /// * `name` - The user defined name for this secret
     /// * `plaintext` - The plaintext of the secret
+    #[tracing::instrument(skip_all)]
     pub fn set_secret(&self, name: impl Into<String>, plaintext: impl Into<String>) -> Secret {
         let mut query = self.selection.select("setSecret");
 
@@ -3060,6 +3212,7 @@ impl Query {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn socket(&self) -> Socket {
         let query = self.selection.select("socket");
 
@@ -3075,6 +3228,7 @@ impl Query {
     /// # Arguments
     ///
     /// * `opt` - optional argument, see inner type for documentation, use <func>_opts to use
+    #[tracing::instrument(skip_all)]
     pub fn socket_opts(&self, opts: QuerySocketOpts) -> Socket {
         let mut query = self.selection.select("socket");
 
@@ -3098,12 +3252,14 @@ pub struct Secret {
 
 impl Secret {
     /// The identifier for this secret.
+    #[tracing::instrument(skip_all)]
     pub async fn id(&self) -> Result<SecretId, DaggerError> {
         let query = self.selection.select("id");
 
         query.execute(self.graphql_client.clone()).await
     }
     /// The value of this secret.
+    #[tracing::instrument(skip_all)]
     pub async fn plaintext(&self) -> Result<String, DaggerError> {
         let query = self.selection.select("plaintext");
 
@@ -3119,6 +3275,7 @@ pub struct Socket {
 
 impl Socket {
     /// The content-addressed identifier of the socket.
+    #[tracing::instrument(skip_all)]
     pub async fn id(&self) -> Result<SocketId, DaggerError> {
         let query = self.selection.select("id");
 

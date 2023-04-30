@@ -4,6 +4,8 @@ use thiserror::Error;
 pub enum ConnectError {
     #[error("failed to connect to dagger engine")]
     FailedToConnect(#[source] eyre::Error),
+    #[error("failed to install otel: {0}")]
+    FailedToInstallOtelTracer(#[source] eyre::Error),
 }
 
 #[derive(Error, Debug)]

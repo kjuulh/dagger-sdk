@@ -1,7 +1,5 @@
 use dagger_core::logger::{DynLogger, Logger};
 use tracing::Level;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::Registry;
 
 pub fn default_logging() -> eyre::Result<()> {
     tracing_subscriber::fmt().with_max_level(Level::INFO).init();
@@ -10,18 +8,20 @@ pub fn default_logging() -> eyre::Result<()> {
 
 #[cfg(feature = "otel")]
 pub fn otel_logging() -> eyre::Result<()> {
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::Registry;
+
     let tracer = opentelemetry_jaeger::new_agent_pipeline()
         .with_service_name("dagger_sdk")
-        .install_simple()?;
+        .install_simple();
 
-    // Create a tracing layer with the configured tracer
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
 
-    // Use the tracing subscriber `Registry`, or any other subscriber
-    // that impls `LookupSpan`
     let subscriber = Registry::default().with(telemetry);
 
-    tracing::subscriber::set_global_default(subscriber)?;
+    if let Err(e) = tracing::subscriber::set_global_default(subscriber) {
+        tracing::error!("failed to install global tracer: {}", e)
+    }
     Ok(())
 }
 

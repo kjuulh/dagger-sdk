@@ -43,6 +43,7 @@ pub fn format_function(funcs: &CommonFunctions, field: &FullTypeFields) -> Optio
     });
 
     let signature = quote! {
+        #[tracing::instrument(skip_all)]
         pub $(is_async) fn $(field.name.pipe(|n | format_struct_name(n)))
     };
 

@@ -34,7 +34,7 @@ genco = "0.17.3"
 tracing-test = "0.2.4"
 
 [features]
-default = ["otel"]
+default = []
 otel = [
   "dep:tracing-opentelemetry",
   "dep:opentelemetry",
