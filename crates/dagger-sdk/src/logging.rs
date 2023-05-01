@@ -11,9 +11,13 @@ pub fn otel_logging() -> eyre::Result<()> {
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::Registry;
 
+    std::env::set_var("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "25");
+
     let tracer = opentelemetry_jaeger::new_agent_pipeline()
         .with_service_name("dagger_sdk")
-        .install_simple();
+        .with_max_packet_size(9216)
+        .with_auto_split_batch(true)
+        .install_batch(opentelemetry::runtime::Tokio)?;
 
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
 

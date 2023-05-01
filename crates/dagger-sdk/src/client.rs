@@ -7,20 +7,14 @@ use dagger_core::engine::Engine as DaggerEngine;
 
 use crate::errors::ConnectError;
 use crate::gen::Query;
-use crate::logging::{StdLogger, TracingLogger};
+use crate::logging::StdLogger;
 use crate::querybuilder::query;
 
 pub type DaggerConn = Arc<Query>;
 
 pub async fn connect() -> Result<DaggerConn, ConnectError> {
     let cfg = if cfg!(feature = "otel") {
-        let cfg = Config::new(
-            None,
-            None,
-            None,
-            None,
-            Some(Arc::new(TracingLogger::default())),
-        );
+        let cfg = Config::new(None, None, None, None, Some(Arc::new(StdLogger::default())));
 
         #[cfg(feature = "otel")]
         crate::logging::otel_logging().map_err(ConnectError::FailedToInstallOtelTracer)?;

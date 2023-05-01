@@ -1,8 +1,14 @@
 use dagger_sdk::HostDirectoryOpts;
+use opentelemetry::global;
+use tracing::Level;
 
+#[tracing::instrument]
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     let client = dagger_sdk::connect().await?;
+    global::set_text_map_propagator(opentelemetry_jaeger::Propagator::new());
+    let span = tracing::span!(Level::INFO, "start main");
+    let _enter = span.enter();
 
     let host_source_dir = client.host().directory_opts(
         "examples/build-the-application/app",
@@ -32,6 +38,10 @@ async fn main() -> eyre::Result<()> {
     let entries = build_dir.entries().await;
 
     println!("build dir contents: \n {:?}", entries);
+
+    drop(_enter);
+
+    global::shutdown_tracer_provider(); // sending remaining spans
 
     Ok(())
 }
