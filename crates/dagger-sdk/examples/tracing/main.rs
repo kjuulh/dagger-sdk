@@ -3,6 +3,9 @@ use dagger_sdk::HostDirectoryOpts;
 use opentelemetry::global;
 use tracing::Level;
 
+#[cfg(not(feature = "otel"))]
+fn main() {}
+
 #[cfg(feature = "otel")]
 #[tracing::instrument]
 #[tokio::main]
