@@ -1,6 +1,8 @@
+#[cfg(feature = "otel")]
 use dagger_sdk::HostDirectoryOpts;
 #[cfg(feature = "otel")]
 use opentelemetry::global;
+#[cfg(feature = "otel")]
 use tracing::Level;
 
 #[cfg(not(feature = "otel"))]
