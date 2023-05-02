@@ -61,13 +61,13 @@ impl Default for TracingLogger {
 
 impl Logger for TracingLogger {
     fn stdout(&self, output: &str) -> eyre::Result<()> {
-        tracing::info!(output = output, "dagger-sdk");
+        tracing::info!(output = output, "dagger_sdk");
 
         Ok(())
     }
 
     fn stderr(&self, output: &str) -> eyre::Result<()> {
-        tracing::warn!(output = output, "dagger-sdk");
+        tracing::warn!(output = output, "dagger_sdk");
 
         Ok(())
     }
