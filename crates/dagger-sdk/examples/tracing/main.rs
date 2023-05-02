@@ -1,7 +1,9 @@
 use dagger_sdk::HostDirectoryOpts;
+#[cfg(feature = "otel")]
 use opentelemetry::global;
 use tracing::Level;
 
+#[cfg(feature = "otel")]
 #[tracing::instrument]
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
