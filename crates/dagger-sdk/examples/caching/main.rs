@@ -1,5 +1,6 @@
 use rand::Rng;
 
+#[tracing::instrument]
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     let client = dagger_sdk::connect().await?;

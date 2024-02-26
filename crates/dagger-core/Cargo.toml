@@ -17,6 +17,7 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 thiserror.workspace = true
+tracing-opentelemetry = { workspace = true, optional = true }
 
 base64 = "0.21.0"
 dirs = "4.0.0"
@@ -37,3 +38,8 @@ sha2 = "0.10.6"
 tar = "0.4.38"
 tempfile = "3.3.0"
 async-trait = "0.1.67"
+
+
+[features]
+default = []
+otel = ["dep:tracing-opentelemetry"]

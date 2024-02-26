@@ -6,6 +6,29 @@ pub fn default_logging() -> eyre::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "otel")]
+pub fn otel_logging() -> eyre::Result<()> {
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::Registry;
+
+    std::env::set_var("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "25");
+
+    let tracer = opentelemetry_jaeger::new_agent_pipeline()
+        .with_service_name("dagger_sdk")
+        .with_max_packet_size(9216)
+        .with_auto_split_batch(true)
+        .install_batch(opentelemetry::runtime::Tokio)?;
+
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+
+    let subscriber = Registry::default().with(telemetry);
+
+    if let Err(e) = tracing::subscriber::set_global_default(subscriber) {
+        tracing::error!("failed to install global tracer: {}", e)
+    }
+    Ok(())
+}
+
 pub struct StdLogger {}
 
 impl Default for StdLogger {
@@ -38,13 +61,13 @@ impl Default for TracingLogger {
 
 impl Logger for TracingLogger {
     fn stdout(&self, output: &str) -> eyre::Result<()> {
-        tracing::info!(output = output, "dagger-sdk");
+        tracing::info!(output = output, "dagger_sdk");
 
         Ok(())
     }
 
     fn stderr(&self, output: &str) -> eyre::Result<()> {
-        tracing::warn!(output = output, "dagger-sdk");
+        tracing::warn!(output = output, "dagger_sdk");
 
         Ok(())
     }

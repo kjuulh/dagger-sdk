@@ -2,6 +2,7 @@ use std::{collections::HashMap, ops::Add, sync::Arc};
 
 use dagger_core::graphql_client::DynGraphQLClient;
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 
 use crate::errors::{DaggerError, DaggerUnpackError};
 
@@ -30,6 +31,7 @@ pub struct Selection {
 }
 
 impl Selection {
+    #[instrument(skip(self))]
     pub fn select_with_alias(&self, alias: &str, name: &str) -> Selection {
         Self {
             name: Some(name.to_string()),
@@ -39,6 +41,7 @@ impl Selection {
         }
     }
 
+    #[instrument(skip(self))]
     pub fn select(&self, name: &str) -> Selection {
         Self {
             name: Some(name.to_string()),
@@ -48,6 +51,7 @@ impl Selection {
         }
     }
 
+    #[instrument(skip(self, value))]
     pub fn arg<S>(&self, name: &str, value: S) -> Selection
     where
         S: Serialize,
@@ -70,6 +74,7 @@ impl Selection {
         s
     }
 
+    #[instrument(skip(self, value))]
     pub fn arg_enum<S>(&self, name: &str, value: S) -> Selection
     where
         S: Serialize,
@@ -93,6 +98,7 @@ impl Selection {
         s
     }
 
+    #[instrument(skip(self))]
     pub fn build(&self) -> Result<String, DaggerError> {
         let mut fields = vec!["query".to_string()];
 
@@ -118,13 +124,12 @@ impl Selection {
         Ok(fields.join("{") + &"}".repeat(fields.len() - 1))
     }
 
+    #[instrument(skip(self, gql_client))]
     pub async fn execute<D>(&self, gql_client: DynGraphQLClient) -> Result<D, DaggerError>
     where
         D: for<'de> Deserialize<'de>,
     {
         let query = self.build()?;
-
-        tracing::trace!(query = query.as_str(), "dagger-query");
 
         let resp: Option<serde_json::Value> = match gql_client.query(&query).await {
             Ok(r) => r,
@@ -136,6 +141,7 @@ impl Selection {
         Ok(resp.unwrap())
     }
 
+    #[instrument(skip(self))]
     fn path(&self) -> Vec<Selection> {
         let mut selections: Vec<Selection> = vec![];
         let mut cur = self;
@@ -152,6 +158,7 @@ impl Selection {
         selections
     }
 
+    #[instrument(skip(self, resp))]
     pub(crate) fn unpack_resp<D>(
         &self,
         resp: Option<serde_json::Value>,
@@ -165,6 +172,7 @@ impl Selection {
         }
     }
 
+    #[instrument(skip(self, r))]
     fn unpack_resp_value<D>(&self, r: serde_json::Value) -> Result<D, DaggerError>
     where
         D: for<'de> Deserialize<'de>,
