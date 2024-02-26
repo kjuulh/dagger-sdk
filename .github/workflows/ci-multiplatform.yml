@@ -117,7 +117,7 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-          #- windows-latest
+          - windows-latest
     steps:
       - uses: actions/checkout@v3
       - name: Install packages (macOS)
@@ -125,8 +125,10 @@ jobs:
         run: |
           ci/scripts/macos-install-packages
       - name: Set up QEMU
+        if: matrix.os != 'windows-latest'
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
+        if: matrix.os != 'windows-latest'
         uses: docker/setup-buildx-action@v2.0.0
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
